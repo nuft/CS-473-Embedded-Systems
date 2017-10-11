@@ -1,8 +1,13 @@
 #include <msp430.h>
 #include <stdint.h>
 
+void PWM_set_duty(uint16_t duty_time_us)
+{
+    TACCR1 = duty_time_us;
+}
+
 // setup Timer_A for ~10ms period
-void pwm_init(uint16_t duty_time_us)
+void PWM_init(uint16_t duty_time_us)
 {
     // GPIO P1.6 CCR1 output
     P1DIR |= BIT6;
@@ -18,47 +23,48 @@ void pwm_init(uint16_t duty_time_us)
     TA0CTL = TASSEL_2 | ID_0 | MC_1;
     TA0CCTL0 = 0;
     TA0CCR0 = 10000 - 1;
-    TA0CCTL1 = CM_0 | CAP | OUTMOD_7;
-    TA0CCR1 = duty_time_us;
+    TA0CCTL1 = CM_0 | OUTMOD_7;
+
+    PWM_set_duty(duty_time_us);
+
+    // XXX DEBUG: enable timer interrupt
+    TA0CTL |= TAIE;
 }
 
-void pwm_set_duty(uint16_t duty_time_us)
-{
-    TACCR1 = duty_time_us;
-}
-#if 0
 #pragma vector=TIMER0_A1_VECTOR
-__interrupt void TimerA0_ISR(void) // Interrupt routine for TAIFG
+__interrupt void TimerA0_ISR(void)
 {
 
     TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
 }
-#endif
 
-#pragma vector=TIMER0_A1_VECTOR
-__interrupt void TimerA0(void) // Interrupt routine for TAIFG
+void ADC_TimerA1_init(uint16_t interrupt_time_us)
 {
+    TA1CTL = TASSEL_2 | ID_0 | MC_1 | TACLR;
+    TA1CCTL1 = CM_0 | CCIS_0 | OUTMOD_0;
+    TA1CCR0 = interrupt_time_us;
+    TA1CCR1 = 0xffff;
+
+    // enable timer interrupt
+    TA1CTL |= TAIE;
+}
+
+#pragma vector=TIMER1_A1_VECTOR
+__interrupt void TimerA1_ISR(void)
+{
+    // XXX DEBUG: toggle P1.6
     P1OUT = P1OUT ^ BIT6;
-    TA0CTL |= TACLR;
-    TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
+
+    TA1CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
     ADC10CTL0 |= ADC10SC;
 }
 
-void timer_A0_init(uint16_t interrupt_time_us)
+/* Configure ADC input for P1.1 */
+void ADC_init(void)
 {
-    TA0CTL = TASSEL_2 | ID_0 | MC_1 | TACLR;
-    TA0CCTL1 = CM_0 | CCIS_0 | OUTMOD_0;
-    TA0CCR0 = interrupt_time_us;
-    TA0CCR1 = interrupt_time_us;
-}
-
-/* Configure ADC input for P1.1
- */
-void adc_init(void)
-{
-    // // P1.1 analog input
-    // P1DIR &= ~BIT1;
-    // ADC10AE0 |= BIT1;
+    // P1.1 analog input
+    P1DIR &= ~BIT1;
+    ADC10AE0 |= BIT1;
 
     /* Notes
     (CONSEQ = 00)
@@ -81,21 +87,16 @@ void adc_init(void)
     ADC10AE0 |= BIT1;
 }
 
-#pragma vector=TIMER0_A1_VECTOR
-__interrupt void TimerA0(void) // Interrupt routine for TAIFG
-{
-    TA0CTL |= TACLR;
-    TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
-    ADC10CTL0 |= ADC10SC;
-}
-
+uint16_t adc_val = 0;
 
 #pragma vector=ADC10_VECTOR
 __interrupt void ADC10_ISR(void)
 {
-    // TODO
-    // read ADC10MEM
-    // clear ADC10IFG
+    // Read conversion result
+    adc_val = ADC10MEM;
+
+    // Clear ADC10IFG interrupt flag
+    ADC10CTL0 &= ~ ADC10IFG;
 }
 
 int main(void)
@@ -117,12 +118,16 @@ int main(void)
     P1DIR |= BIT3;
     P1OUT |= BIT3;
 
-    // setup PWM for 10ms period, 1ms duty time
-//    pwm_init(1000);
-    timer_A0_init(50000);
+    // XXX DEBUG: enable timer interrupt
+    P1DIR |= BIT6;
 
-    // enable timer interrupt
-    TA0CTL |= TAIE;
+    // setup PWM for 10ms period, 1ms duty time
+    //  PWM_init(1000);
+
+
+//    ADC_init();
+    ADC_TimerA1_init(50000); // trigger ADC every 50ms
+
     // Enable global Interrupt
     __bis_SR_register(GIE);
 
