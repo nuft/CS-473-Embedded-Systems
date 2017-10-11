@@ -38,11 +38,16 @@ __interrupt void TimerA0_ISR(void)
     TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
 }
 
-void ADC_TimerA1_init(uint16_t interrupt_time_us)
+void ADC_TimerA1_init(uint16_t period_us)
 {
+    /* TimerA1 periodic interrupt configuration:
+     * input clock SMCLK = 1MHz
+     * reload: TACCR0 = period_us - 1
+     * Up Mode
+     */
     TA1CTL = TASSEL_2 | ID_0 | MC_1 | TACLR;
     TA1CCTL1 = CM_0 | CCIS_0 | OUTMOD_0;
-    TA1CCR0 = interrupt_time_us;
+    TA1CCR0 = period_us;
 
     // enable timer interrupt
     TA1CTL |= TAIE;
@@ -58,28 +63,19 @@ __interrupt void TimerA1_ISR(void)
 /* Configure ADC input for P1.1 */
 void ADC_init(void)
 {
-    // P1.1 analog input
+    /* ADC configuration: 
+     * single conversion
+     * channel A1 (pin P1.1)
+     * 4x sample-and-hold time
+     * Conversion trigger via ADC10SC bit
+     * ADC10OSC clock source about 5MHz
+     */
+    ADC10CTL0 = ADC10SHT_0 | ADC10SR | ADC10ON | ADC10IE | ENC | SREF_0;
+    ADC10CTL1 = INCH_1 | SHS_0 | ADC10DF_0 | ADC10DIV_7 | ADC10SSEL_3 | CONSEQ_0;
+    ADC10DTC1 = 0;
+
+    // P1.1 input
     P1DIR &= ~BIT1;
-    ADC10AE0 |= BIT1;
-
-    /* Notes
-    (CONSEQ = 00)
-    ADC10ON = 1
-
-    (ENC and SAMPCON rising edge)
-
-    select channel ADC10CTL1 INCHx
-
-    ADC10DTC1 = 0
-    ADC10IE = 1
-    */
-
-    ADC10CTL0 = SREF_0 | ADC10SHT_0 | ADC10SR;
-
-
-    // ADC control registers setup -- to be checked
-    ADC10CTL0 = ADC10SHT_0 | ADC10SR | REFON | ADC10ON | ADC10IE | ENC;
-    ADC10CTL1 = INCH_0 | SHS_0 | ADC10DIV_7 | ADC10SSEL_3;
     ADC10AE0 |= BIT1;
 }
 
@@ -91,8 +87,10 @@ __interrupt void ADC10_ISR(void)
     // Read conversion result
     adc_val = ADC10MEM;
 
+    PWM_set_duty(1000 + 1000*adc_val/1023);
+
     // Clear ADC10IFG interrupt flag
-    ADC10CTL0 &= ~ ADC10IFG;
+    ADC10CTL0 &= ~ ADC10IFG;    
 }
 
 int main(void)
@@ -117,8 +115,7 @@ int main(void)
     // setup PWM for 10ms period, 1ms duty time
     PWM_init(1000);
 
-
-//    ADC_init();
+    ADC_init();
     ADC_TimerA1_init(50000); // trigger ADC every 50ms
 
     // Enable global Interrupt
