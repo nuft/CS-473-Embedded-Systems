@@ -26,20 +26,39 @@ void pwm_set_duty(uint16_t duty_time_us)
 {
     TACCR1 = duty_time_us;
 }
-
+#if 0
 #pragma vector=TIMER0_A1_VECTOR
 __interrupt void TimerA0_ISR(void) // Interrupt routine for TAIFG
 {
 
     TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
 }
+#endif
+
+#pragma vector=TIMER0_A1_VECTOR
+__interrupt void TimerA0(void) // Interrupt routine for TAIFG
+{
+    P1OUT = P1OUT ^ BIT6;
+    TA0CTL |= TACLR;
+    TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
+    ADC10CTL0 |= ADC10SC;
+}
+
+void timer_A0_init(uint16_t interrupt_time_us)
+{
+    TA0CTL = TASSEL_2 | ID_0 | MC_1 | TACLR;
+    TA0CCTL1 = CM_0 | CCIS_0 | OUTMOD_0;
+    TA0CCR0 = interrupt_time_us;
+    TA0CCR1 = interrupt_time_us;
+}
 
 /* Configure ADC input for P1.1
  */
 void adc_init(void)
 {
-    // P1DIR &= ~BIT5;
-    // ADC10AE0 |= BIT5;
+    // // P1.1 analog input
+    // P1DIR &= ~BIT1;
+    // ADC10AE0 |= BIT1;
 
     /* Notes
     (CONSEQ = 00)
@@ -53,8 +72,23 @@ void adc_init(void)
     ADC10IE = 1
     */
 
-    ADC10CTL0 = SREF_0 | ADC10SHT_0 | ADC10SR
+    ADC10CTL0 = SREF_0 | ADC10SHT_0 | ADC10SR;
+
+
+    // ADC control registers setup -- to be checked
+    ADC10CTL0 = ADC10SHT_0 | ADC10SR | REFON | ADC10ON | ADC10IE | ENC;
+    ADC10CTL1 = INCH_0 | SHS_0 | ADC10DIV_7 | ADC10SSEL_3;
+    ADC10AE0 |= BIT1;
 }
+
+#pragma vector=TIMER0_A1_VECTOR
+__interrupt void TimerA0(void) // Interrupt routine for TAIFG
+{
+    TA0CTL |= TACLR;
+    TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
+    ADC10CTL0 |= ADC10SC;
+}
+
 
 #pragma vector=ADC10_VECTOR
 __interrupt void ADC10_ISR(void)
@@ -84,7 +118,8 @@ int main(void)
     P1OUT |= BIT3;
 
     // setup PWM for 10ms period, 1ms duty time
-    pwm_init(1000);
+//    pwm_init(1000);
+    timer_A0_init(50000);
 
     // enable timer interrupt
     TA0CTL |= TAIE;
