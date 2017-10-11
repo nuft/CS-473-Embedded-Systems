@@ -43,7 +43,6 @@ void ADC_TimerA1_init(uint16_t interrupt_time_us)
     TA1CTL = TASSEL_2 | ID_0 | MC_1 | TACLR;
     TA1CCTL1 = CM_0 | CCIS_0 | OUTMOD_0;
     TA1CCR0 = interrupt_time_us;
-    TA1CCR1 = 0xffff;
 
     // enable timer interrupt
     TA1CTL |= TAIE;
@@ -52,9 +51,6 @@ void ADC_TimerA1_init(uint16_t interrupt_time_us)
 #pragma vector=TIMER1_A1_VECTOR
 __interrupt void TimerA1_ISR(void)
 {
-    // XXX DEBUG: toggle P1.6
-    P1OUT = P1OUT ^ BIT6;
-
     TA1CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
     ADC10CTL0 |= ADC10SC;
 }
@@ -118,11 +114,8 @@ int main(void)
     P1DIR |= BIT3;
     P1OUT |= BIT3;
 
-    // XXX DEBUG: enable timer interrupt
-    P1DIR |= BIT6;
-
     // setup PWM for 10ms period, 1ms duty time
-    //  PWM_init(1000);
+    PWM_init(1000);
 
 
 //    ADC_init();
