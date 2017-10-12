@@ -56,6 +56,9 @@ void ADC_TimerA1_init(uint16_t period_us)
 #pragma vector=TIMER1_A1_VECTOR
 __interrupt void TimerA1_ISR(void)
 {
+    // XXX DEBUG
+    // P1OUT ^= BIT6;
+
     TA1CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
     ADC10CTL0 |= ADC10SC;
 }
@@ -66,13 +69,15 @@ void ADC_init(void)
     /* ADC configuration: 
      * single conversion
      * channel A1 (pin P1.1)
-     * 4x sample-and-hold time
+     * 64x sample-and-hold time
      * Conversion trigger via ADC10SC bit
      * ADC10OSC clock source about 5MHz
      */
-    ADC10CTL0 = ADC10SHT_0 | ADC10SR | ADC10ON | ADC10IE | ENC | SREF_0;
-    ADC10CTL1 = INCH_1 | SHS_0 | ADC10DF_0 | ADC10DIV_7 | ADC10SSEL_3 | CONSEQ_0;
+    ADC10CTL0 = ADC10SHT_3 | ADC10SR | ADC10ON | ADC10IE | SREF_0;
+    ADC10CTL1 = INCH_1 | SHS_0 | ADC10DIV_7 | ADC10SSEL_3 | CONSEQ_0;
     ADC10DTC1 = 0;
+
+    ADC10CTL0 |= ENC;
 
     // P1.1 input
     P1DIR &= ~BIT1;
@@ -84,10 +89,14 @@ uint16_t adc_val = 0;
 #pragma vector=ADC10_VECTOR
 __interrupt void ADC10_ISR(void)
 {
+    // XXX DEBUG
+//    P1OUT ^= BIT6;
+
+
     // Read conversion result
     adc_val = ADC10MEM;
 
-    PWM_set_duty(1000 + 1000*adc_val/1023);
+    PWM_set_duty(1000 + (uint32_t)1000*adc_val/1023);
 
     // Clear ADC10IFG interrupt flag
     ADC10CTL0 &= ~ ADC10IFG;    
@@ -110,7 +119,10 @@ int main(void)
 
     // P1.3 output low
     P1DIR |= BIT3;
-    P1OUT |= BIT3;
+    P1OUT &= ~BIT3;
+
+    // XXX DEBUG GPIO P1.6 output
+    // P1DIR |= BIT6;
 
     // setup PWM for 10ms period, 1ms duty time
     PWM_init(1000);
