@@ -6,7 +6,7 @@ void PWM_set_duty(uint16_t duty_time_us)
     TACCR1 = duty_time_us;
 }
 
-// setup Timer_A for ~10ms period
+// setup Timer_A for 2ms period
 void PWM_init(uint16_t duty_time_us)
 {
     // GPIO P1.6 CCR1 output
@@ -16,26 +16,16 @@ void PWM_init(uint16_t duty_time_us)
 
     /* TimerA0 PWM configuration:
      * input clock SMCLK = 1MHz
-     * reload: TACCR0 = 10000 - 1 => 100Hz or 10ms period
+     * reload: TACCR0 = 2000 - 1 => 500Hz or 2ms period
      * Up Mode
      * OUTMOD: Reset/Set
      */
     TA0CTL = TASSEL_2 | ID_0 | MC_1;
     TA0CCTL0 = 0;
-    TA0CCR0 = 10000 - 1;
+    TA0CCR0 = 2000 - 1;
     TA0CCTL1 = CM_0 | OUTMOD_7;
 
     PWM_set_duty(duty_time_us);
-
-    // XXX DEBUG: enable timer interrupt
-    TA0CTL |= TAIE;
-}
-
-#pragma vector=TIMER0_A1_VECTOR
-__interrupt void TimerA0_ISR(void)
-{
-
-    TA0CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
 }
 
 void ADC_TimerA1_init(uint16_t period_us)
@@ -56,9 +46,6 @@ void ADC_TimerA1_init(uint16_t period_us)
 #pragma vector=TIMER1_A1_VECTOR
 __interrupt void TimerA1_ISR(void)
 {
-    // XXX DEBUG
-    // P1OUT ^= BIT6;
-
     TA1CTL &= (~TAIFG); // Clear TAIFG flag in TA0CTL register
     ADC10CTL0 |= ADC10SC;
 }
@@ -89,14 +76,10 @@ uint16_t adc_val = 0;
 #pragma vector=ADC10_VECTOR
 __interrupt void ADC10_ISR(void)
 {
-    // XXX DEBUG
-//    P1OUT ^= BIT6;
-
-
     // Read conversion result
     adc_val = ADC10MEM;
 
-    PWM_set_duty(1000 + (uint32_t)1000*adc_val/1023);
+    PWM_set_duty(800 + (uint32_t)400*adc_val/1023);
 
     // Clear ADC10IFG interrupt flag
     ADC10CTL0 &= ~ ADC10IFG;    
@@ -121,10 +104,7 @@ int main(void)
     P1DIR |= BIT3;
     P1OUT &= ~BIT3;
 
-    // XXX DEBUG GPIO P1.6 output
-    // P1DIR |= BIT6;
-
-    // setup PWM for 10ms period, 1ms duty time
+    // setup PWM, 1ms duty time
     PWM_init(1000);
 
     ADC_init();
