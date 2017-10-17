@@ -53,7 +53,7 @@ __interrupt void TimerA1_ISR(void)
 /* Configure ADC input for P1.1 */
 void ADC_init(void)
 {
-    /* ADC configuration: 
+    /* ADC configuration:
      * single conversion
      * channel A1 (pin P1.1)
      * 64x sample-and-hold time
@@ -61,7 +61,7 @@ void ADC_init(void)
      * ADC10OSC clock source about 5MHz
      */
     ADC10CTL0 = ADC10SHT_3 | ADC10SR | ADC10ON | ADC10IE | SREF_0;
-    ADC10CTL1 = INCH_1 | SHS_0 | ADC10DIV_7 | ADC10SSEL_3 | CONSEQ_0;
+    ADC10CTL1 = INCH_1 | SHS_0 | ADC10DIV_7 | ADC10SSEL_0 | CONSEQ_0;
     ADC10DTC1 = 0;
 
     ADC10CTL0 |= ENC;
@@ -79,10 +79,10 @@ __interrupt void ADC10_ISR(void)
     // Read conversion result
     adc_val = ADC10MEM;
 
-    PWM_set_duty(800 + (uint32_t)400*adc_val/1023);
+    PWM_set_duty(800 + (uint32_t)400 * adc_val / 1023);
 
     // Clear ADC10IFG interrupt flag
-    ADC10CTL0 &= ~ ADC10IFG;    
+    ADC10CTL0 &= ~ADC10IFG;
 }
 
 int main(void)
