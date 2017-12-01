@@ -35,20 +35,29 @@ int main()
 
 	uint8_t csr = IORD_8DIRECT(BLINKY_0_BASE, BLINKY_SR);
 	printf("csr: %2x\n", csr);
+	unsigned int i;
+    unsigned active_led = 0;
+   /* IOWR_8DIRECT(BLINKY_0_BASE, BLINKY_CR, BLINKY_CR_LOAD);
+    		for (i = 15; i >=0; i--) {
 
-    unsigned active_led = 0;;
+    		            led_write_data(i, 0, 0, 0);
+    				}
+    		IOWR_8DIRECT(BLINKY_0_BASE, BLINKY_CR, BLINKY_CR_START);
+    		while(IORD_8DIRECT(BLINKY_0_BASE, BLINKY_SR) == BLINKY_SR_BUSY);
+
+    				delay(100000);
+    		// fill data*/
+
 	while (1) {
 		// enter state LOAD
 		IOWR_8DIRECT(BLINKY_0_BASE, BLINKY_CR, BLINKY_CR_LOAD);
 
-		// fill data
-		unsigned int i;
-		for (i = 0; i < 16; i++) {
-            if (i == active_led) {
-                led_write_data(i, 0, 0xff, 0);
-            } else {
+		for (i = 0; i<16; i++) {
+            if (i == active_led)
+                led_write_data(i, 0xff, 0xff, 0);
+             else
                 led_write_data(i, 0, 0, 0);
-            }
+
 		}
         active_led = (active_led + 1) % 16;
 

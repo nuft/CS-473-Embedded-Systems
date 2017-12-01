@@ -24,7 +24,7 @@ entity DE0_Nano_SoC_top_level is
 --        ADC_SCK          : out   std_logic;
 --        ADC_SDI          : out   std_logic;
 --        ADC_SDO          : in    std_logic;
---
+
 --        -- ARDUINO
 --        ARDUINO_IO       : inout std_logic_vector(15 downto 0);
 --        ARDUINO_RESET_N  : inout std_logic;
@@ -37,19 +37,19 @@ entity DE0_Nano_SoC_top_level is
         -- KEY
         KEY_N            : in    std_logic_vector(1 downto 0);
 
---        -- LED
---        LED              : out   std_logic_vector(7 downto 0);
---
---        -- SW
---        SW               : in    std_logic_vector(3 downto 0);
+        -- LED
+        LED              : out   std_logic_vector(7 downto 0);
+
+        -- SW
+        SW               : in    std_logic_vector(3 downto 0);
 
         -- GPIO_0
-        GPIO_0           : out std_logic_vector(35 downto 0)
+        GPIO_0           : inout std_logic_vector(35 downto 0)
 
---        -- GPIO_1
+        -- GPIO_1
 --        GPIO_1           : inout std_logic_vector(35 downto 0);
---
---        -- HPS
+
+        -- HPS
 --        HPS_CONV_USB_N   : inout std_logic;
 --        HPS_DDR3_ADDR    : out   std_logic_vector(14 downto 0);
 --        HPS_DDR3_BA      : out   std_logic_vector(2 downto 0);
@@ -102,19 +102,25 @@ entity DE0_Nano_SoC_top_level is
 end entity DE0_Nano_SoC_top_level;
 
 architecture rtl of DE0_Nano_SoC_top_level is
+
 	component system is
 		port (
-			blinky_0_conduit_end_leddata : out std_logic;        -- leddata
-			clk_clk                      : in  std_logic := 'X'; -- clk
-			reset_reset_n                : in  std_logic := 'X'  -- reset_n
+			blinky_0_conduit_end_writeresponsevalid_n : out std_logic;        -- writeresponsevalid_n
+			clk_clk                                   : in  std_logic := 'X'; -- clk
+			reset_reset_n                             : in  std_logic := 'X'  -- reset_n
 		);
 	end component system;
+
 begin
+
+
 
 	u0 : component system
 		port map (
-			blinky_0_conduit_end_leddata => GPIO_0(0), -- blinky_0_conduit_end.leddata
-			clk_clk                      => FPGA_CLK1_50,                      --                  clk.clk
-			reset_reset_n                => KEY_N(0)                 --                reset.reset_n
+			blinky_0_conduit_end_writeresponsevalid_n => GPIO_0(0), -- blinky_0_conduit_end.writeresponsevalid_n
+			clk_clk                                   => FPGA_CLK1_50,                                   --                  clk.clk
+			reset_reset_n                             => KEY_N(0)                              --                reset.reset_n
 		);
+
+
 end;
