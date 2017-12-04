@@ -1,13 +1,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-Entity CameraAvalonSlave is
+Entity camera_avalon_slave is
 Port(
     Clk             : IN std_logic;
-    Reset_n         : IN std_logic;
+    nReset          : IN std_logic;
 
     -- Avalon Slave
-    Address         : IN std_logic_vector (2 DOWNTO 0);
+    Address         : IN std_logic_vector (1 DOWNTO 0);
     ChipSelect      : IN std_logic;
     Read            : IN std_logic;
     Write           : IN std_logic;
@@ -23,9 +23,9 @@ Port(
     ImageStartIrq   : IN std_logic;
     ImageEndIrq     : IN std_logic
 );
-End CameraAvalonSlave;
+End camera_avalon_slave;
 
-Architecture comp of CameraAvalonSlave is
+Architecture comp of camera_avalon_slave is
 -- signals for register access
    signal   iControlRegister        :  std_logic_vector (1 DOWNTO 0);
    signal   iInterruptMaskRegister  :  std_logic_vector (1 DOWNTO 0);
@@ -51,20 +51,24 @@ begin
                 -- Read registers
                 if ChipSelect = '1' and Read = '1' then
                     case Address(1 downto 0) is
-                        when '00' => ReadData(1 downto 0) <= iControlRegister;
-                        when '01' => ReadData(1 downto 0) <= iInterruptMaskRegister;
-                        when '10' => ReadData(1 downto 0) <= iInterruptStatusRegister;
-                        when '11' => ReadData <= iImageAddressRegister;
+                        when "00" => ReadData(1 downto 0) <= iControlRegister;
+                        when "01" => ReadData(1 downto 0) <= iInterruptMaskRegister;
+                        when "10" => ReadData(1 downto 0) <= iInterruptStatusRegister;
+                        when "11" => ReadData <= iImageAddressRegister;
                         when others => null;
                     end case;
 
+                AddressUpdate <= '0';
                 -- Write registers
                 elsif ChipSelect = '1' and Write = '1' then -- Write cycle
                     case Address(1 downto 0) is
-                        when '00' => iControlRegister <= WriteData(1 DOWNTO 0);
-                        when '01' => iInterruptMaskRegister <= WriteData(1 DOWNTO 0);
-                        when '10' => iInterruptStatusRegister <= WriteData(1 DOWNTO 0);
-                        when '11' => iImageAddressRegister <= WriteData;
+                        when "00" => iControlRegister <= WriteData(1 DOWNTO 0);
+                        when "01" => iInterruptMaskRegister <= WriteData(1 DOWNTO 0);
+                        when "10" => iInterruptStatusRegister <= WriteData(1 DOWNTO 0);
+                        when "11" =>
+                            iImageAddressRegister <= WriteData;
+                            ImageAddress <= WriteData;
+                            AddressUpdate <= '1';
                         when others => null;
                     end case;
                 end if;
@@ -77,9 +81,10 @@ begin
             if nReset = '0' then
                 Irq <= '0';
             elsif rising_edge(Clk) then
-                Irq <= '1' when (ImageEndIrq and iInterruptMaskRegister(0)) = '1' else
-                       '1' when (ImageStartIrq and iInterruptMaskRegister(1)) = '1' else
-                       '0';
+                Irq <= '0';
+                if ((ImageStartIrq & ImageEndIrq) and iInterruptMaskRegister) /= "00" then
+                    Irq <= '1';
+                end if;
             end if;
     end process;
 
