@@ -104,42 +104,6 @@ stimulus: process
         Read <= '0';
     end procedure AvalonRead;
 
-    -- Interrupt Mask test
-    procedure TEST_InterruptMask is
-    begin
-        -- Test Interrupt mask
-        ImageStartIrq <= '0';
-        ImageEndIrq <= '1';
-        AvalonWrite(REG_IMR, to_unsigned(0, 32));
-        wait for clk_period;
-        assert Irq = '0'
-        report "IRQ ImageEndIrq not masked" severity failure;
-
-        ImageStartIrq <= '0';
-        ImageEndIrq <= '1';
-        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
-        AvalonWrite(REG_IMR, to_unsigned(END_IRQ, 32));
-        wait for clk_period;
-        assert Irq = '1'
-        report "IRQ ImageEndIrq not activated" severity failure;
-
-        ImageStartIrq <= '1';
-        ImageEndIrq <= '0';
-        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
-        AvalonWrite(REG_IMR, to_unsigned(START_IRQ, 32));
-        wait for clk_period;
-        assert Irq = '1'
-        report "IRQ ImageStart not activated" severity failure;
-
-        ImageStartIrq <= '1';
-        ImageEndIrq <= '0';
-        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
-        AvalonWrite(REG_IMR, to_unsigned(0, 32));
-        wait for clk_period;
-        assert Irq = '0'
-        report "IRQ ImageStart not masked" severity failure;
-    end procedure TEST_InterruptMask;
-
     procedure TEST_ImageAddress is
     begin
         -- Write Image Address Register
@@ -218,7 +182,54 @@ stimulus: process
         assert unsigned(ReadData) = to_unsigned(START_IRQ, 32)
         report "END_IRQ not cleared" severity failure;
 
+        -- check if writing 0 keeps intrrupt flags
+        ImageEndIrq <= '1';
+        ImageStartIrq <= '1';
+        wait for clk_period;
+        ImageEndIrq <= '0';
+        ImageStartIrq <= '0';
+        AvalonWrite(REG_ISR, to_unsigned(0, 32));
+        AvalonRead(REG_ISR);
+        assert unsigned(ReadData) = to_unsigned(START_IRQ + END_IRQ, 32)
+        report "IRQ flags not set" severity failure;
+
     end procedure TEST_InterruptSetClear;
+
+    -- Interrupt Mask test
+    procedure TEST_InterruptMask is
+    begin
+        -- Test Interrupt mask
+        ImageStartIrq <= '0';
+        ImageEndIrq <= '1';
+        AvalonWrite(REG_IMR, to_unsigned(0, 32));
+        wait for clk_period;
+        assert Irq = '0'
+        report "IRQ ImageEndIrq not masked" severity failure;
+
+        ImageStartIrq <= '0';
+        ImageEndIrq <= '1';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_IMR, to_unsigned(END_IRQ, 32));
+        wait for clk_period;
+        assert Irq = '1'
+        report "IRQ ImageEndIrq not activated" severity failure;
+
+        ImageStartIrq <= '1';
+        ImageEndIrq <= '0';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_IMR, to_unsigned(START_IRQ, 32));
+        wait for clk_period;
+        assert Irq = '1'
+        report "IRQ ImageStart not activated" severity failure;
+
+        ImageStartIrq <= '1';
+        ImageEndIrq <= '0';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_IMR, to_unsigned(0, 32));
+        wait for clk_period;
+        assert Irq = '0'
+        report "IRQ ImageStart not masked" severity failure;
+    end procedure TEST_InterruptMask;
 
     procedure TEST_RESET is
     begin
@@ -240,18 +251,25 @@ stimulus: process
     end procedure TEST_RESET;
 
 begin -- TEST PROCESS
+    report "START TESTBENCH" & LF;
+
+    report "TEST_ImageAddress";
     TEST_RESET;
     TEST_ImageAddress;
 
+    report "TEST_Avalon";
     TEST_RESET;
     TEST_Avalon;
 
+    report "TEST_InterruptSetClear";
     TEST_RESET;
     TEST_InterruptSetClear;
 
+    report "TEST_InterruptMask";
     TEST_RESET;
     TEST_InterruptMask;
 
+    report "DONE" & LF;
     -- Stop the clock and hence terminate the simulation
     sim_ended <= '1';
     wait;
