@@ -62,27 +62,167 @@ begin
     tb_clk <= not tb_clk after clk_period/2 when sim_ended /= '1' else '0';
     Clk <= tb_clk;
 
-    stimulus: process
-        -- Simulate Avalon write
-        procedure AvalonWrite(
-            constant addr    : std_logic_vector(1 DOWNTO 0);
-            constant data    : unsigned(31 DOWNTO 0)) is
-        begin
-            Address <= addr;
-            ChipSelect <= '1';
-            Read <= '0';
-            Write <= '1';
-            WriteData <= std_logic_vector(data);
-            wait until rising_edge(tb_clk);
-            wait for clk_period;
-            WriteData <= (others => '0');
-            Address <= (others => '0');
-            ChipSelect <= '0';
-            Write <= '0';
-        end procedure AvalonWrite;
+stimulus: process
+    constant REG_CR: std_logic_vector(1 DOWNTO 0) := "00";
+    constant REG_IMR: std_logic_vector(1 DOWNTO 0) := "01";
+    constant REG_ISR: std_logic_vector(1 DOWNTO 0) := "10";
+    constant REG_IAR: std_logic_vector(1 DOWNTO 0) := "11";
+
+    constant END_IRQ: natural := 1;
+    constant START_IRQ: natural := 2;
+
+    -- Simulate Avalon write
+    procedure AvalonWrite(
+        constant addr: std_logic_vector(1 DOWNTO 0);
+        constant data: unsigned(31 DOWNTO 0)) is
     begin
+        wait until rising_edge(tb_clk);
+        Address <= addr;
+        ChipSelect <= '1';
+        Read <= '0';
+        Write <= '1';
+        WriteData <= std_logic_vector(data);
+        wait for clk_period;
+        WriteData <= (others => '0');
+        Address <= (others => '0');
+        ChipSelect <= '0';
+        Write <= '0';
+    end procedure AvalonWrite;
 
+    -- Simulate Avalon read
+    procedure AvalonRead(
+        constant addr: std_logic_vector(1 DOWNTO 0)) is
+    begin
+        wait until rising_edge(tb_clk);
+        Address <= addr;
+        ChipSelect <= '1';
+        Read <= '1';
+        Write <= '0';
+        wait for clk_period;
+        Address <= (others => '0');
+        ChipSelect <= '0';
+        Read <= '0';
+    end procedure AvalonRead;
 
+    -- Interrupt Mask test
+    procedure TEST_InterruptMask is
+    begin
+        -- Test Interrupt mask
+        ImageStartIrq <= '0';
+        ImageEndIrq <= '1';
+        AvalonWrite(REG_IMR, to_unsigned(0, 32));
+        wait for clk_period;
+        assert Irq = '0'
+        report "IRQ ImageEndIrq not masked" severity failure;
+
+        ImageStartIrq <= '0';
+        ImageEndIrq <= '1';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_IMR, to_unsigned(END_IRQ, 32));
+        wait for clk_period;
+        assert Irq = '1'
+        report "IRQ ImageEndIrq not activated" severity failure;
+
+        ImageStartIrq <= '1';
+        ImageEndIrq <= '0';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_IMR, to_unsigned(START_IRQ, 32));
+        wait for clk_period;
+        assert Irq = '1'
+        report "IRQ ImageStart not activated" severity failure;
+
+        ImageStartIrq <= '1';
+        ImageEndIrq <= '0';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_IMR, to_unsigned(0, 32));
+        wait for clk_period;
+        assert Irq = '0'
+        report "IRQ ImageStart not masked" severity failure;
+    end procedure TEST_InterruptMask;
+
+    procedure TEST_ImageAddress is
+    begin
+        -- Write Image Address Register
+        AvalonWrite(REG_IAR, to_unsigned(16#c0ffee#, 32));
+        assert unsigned(ImageAddress) = 16#c0ffee#
+        report "Does not keep ImageAddress" severity failure;
+
+        -- check Address update
+        wait for clk_period;
+        Address <= REG_IAR;
+        ChipSelect <= '1';
+        WriteData <= std_logic_vector(to_unsigned(42, WriteData'length));
+        Write <= '1';
+        wait for clk_period / 2;
+        assert AddressUpdate = '1'
+        report "AddressUpdate not signaled" severity failure;
+        wait for clk_period / 2;
+        Write <= '0';
+        ChipSelect <= '0';
+        WriteData <= std_logic_vector(to_unsigned(0, WriteData'length));
+        wait for clk_period / 2;
+        assert AddressUpdate = '0'
+        report "AddressUpdate not cleared" severity failure;
+        wait until rising_edge(tb_clk);
+    end procedure TEST_ImageAddress;
+
+    procedure TEST_Avalon is
+    begin
+        AvalonWrite(REG_CR, to_unsigned(3, 32));
+        AvalonRead(REG_CR);
+        assert unsigned(ReadData) = to_unsigned(3, 32)
+        report "AvalonRead /= AvalonWrite" severity failure;
+        AvalonWrite(REG_IMR, to_unsigned(3, 32));
+        AvalonRead(REG_IMR);
+        assert unsigned(ReadData) = to_unsigned(3, 32)
+        report "AvalonRead /= AvalonWrite" severity failure;
+        AvalonWrite(REG_IAR, to_unsigned(123456, 32));
+        AvalonRead(REG_IAR);
+        assert unsigned(ReadData) = to_unsigned(123456, 32)
+        report "AvalonRead /= AvalonWrite" severity failure;
+    end procedure TEST_Avalon;
+
+    procedure TEST_InterruptSetClear is
+    begin
+        ImageEndIrq <= '0';
+        ImageStartIrq <= '1';
+        wait for clk_period;
+        ImageStartIrq <= '0';
+        AvalonRead(REG_ISR);
+        assert unsigned(ReadData) = to_unsigned(START_IRQ, 32)
+        report "START_IRQ not set" severity failure;
+        AvalonWrite(REG_ISR, to_unsigned(START_IRQ, 32));
+        AvalonRead(REG_ISR);
+        assert unsigned(ReadData) = to_unsigned(0, 32)
+        report "START_IRQ not cleared" severity failure;
+
+        ImageEndIrq <= '1';
+        ImageStartIrq <= '0';
+        wait for clk_period;
+        ImageEndIrq <= '0';
+        AvalonRead(REG_ISR);
+        assert unsigned(ReadData) = to_unsigned(END_IRQ, 32)
+        report "END_IRQ not set" severity failure;
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ, 32));
+        AvalonRead(REG_ISR);
+        assert unsigned(ReadData) = to_unsigned(0, 32)
+        report "END_IRQ not cleared" severity failure;
+
+        ImageEndIrq <= '1';
+        ImageStartIrq <= '1';
+        wait for clk_period;
+        ImageEndIrq <= '0';
+        ImageStartIrq <= '0';
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ, 32));
+        AvalonRead(REG_ISR);
+        assert unsigned(ReadData) = to_unsigned(START_IRQ, 32)
+        report "END_IRQ not cleared" severity failure;
+
+    end procedure TEST_InterruptSetClear;
+
+    procedure TEST_RESET is
+    begin
+        -- init values
         Address <= (others => '0');
         ChipSelect <= '0';
         Read <= '0';
@@ -91,48 +231,30 @@ begin
         ImageStartIrq <= '0';
         ImageEndIrq <= '0';
 
-        -- Reset generation
+        -- RESET generation
         wait for clk_period/4;
         nReset <= '0';
         wait for clk_period/4;
         nReset <= '1';
-        wait for clk_period;
+        wait until rising_edge(tb_clk);
+    end procedure TEST_RESET;
 
-        -- Write ControlRegister
-        AvalonWrite("00", to_unsigned(1, 32));
+begin -- TEST PROCESS
+    TEST_RESET;
+    TEST_ImageAddress;
 
-        -- Write InterruptMaskRegister
-        Address <= "01";
-        ChipSelect <= '1';
-        WriteData <= std_logic_vector(to_unsigned(16#3#, WriteData'length));
-        Write <= '1';
-        wait for clk_period;
-        Write <= '0';
-        ChipSelect <= '0';
-        WriteData <= std_logic_vector(to_unsigned(0, WriteData'length));
-        wait for clk_period;
+    TEST_RESET;
+    TEST_Avalon;
 
-        -- Write ImageAddressRegister
-        Address <= "11";
-        ChipSelect <= '1';
-        WriteData <= std_logic_vector(to_unsigned(16#2ac0ffee#, WriteData'length));
-        Write <= '1';
-        wait for clk_period;
-        Write <= '0';
-        ChipSelect <= '0';
-        WriteData <= std_logic_vector(to_unsigned(0, WriteData'length));
-        wait for clk_period;
+    TEST_RESET;
+    TEST_InterruptSetClear;
 
-        assert unsigned(ImageAddress) = 16#2ac0ffee#
-        report "Does not keep ImageAddress" severity failure;
-        assert AddressUpdate = '1'
-        report "Does not signal AddressUpdate" severity failure;
+    TEST_RESET;
+    TEST_InterruptMask;
 
-        wait for 3*clk_period;
-
-        -- Stop the clock and hence terminate the simulation
-        sim_ended <= '1';
-        wait;
-    end process;
+    -- Stop the clock and hence terminate the simulation
+    sim_ended <= '1';
+    wait;
+end process;
 
 end tb;
