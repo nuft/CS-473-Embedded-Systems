@@ -19,6 +19,9 @@ architecture tb of camera_avalon_slave_tb is
               Irq           : out std_logic;
               ImageAddress  : out std_logic_vector (31 downto 0);
               AddressUpdate : out std_logic;
+              CameraIfEnable: out std_logic;
+              MasterEnable  : out std_logic;
+              Camera_nReset : out std_logic;
               ImageStartIrq : in std_logic;
               ImageEndIrq   : in std_logic);
     end component;
@@ -34,6 +37,9 @@ architecture tb of camera_avalon_slave_tb is
     signal Irq           : std_logic;
     signal ImageAddress  : std_logic_vector (31 downto 0);
     signal AddressUpdate : std_logic;
+    signal CameraIfEnable: std_logic;
+    signal MasterEnable  : std_logic;
+    signal Camera_nReset : std_logic;
     signal ImageStartIrq : std_logic;
     signal ImageEndIrq   : std_logic;
 
@@ -55,6 +61,9 @@ begin
               Irq           => Irq,
               ImageAddress  => ImageAddress,
               AddressUpdate => AddressUpdate,
+              CameraIfEnable=> CameraIfEnable,
+              MasterEnable  => MasterEnable,
+              Camera_nReset => Camera_nReset,
               ImageStartIrq => ImageStartIrq,
               ImageEndIrq   => ImageEndIrq);
 
@@ -70,6 +79,9 @@ stimulus: process
 
     constant END_IRQ: natural := 1;
     constant START_IRQ: natural := 2;
+
+    constant PERIPH_EN: natural := 1;
+    constant CAM_EN: natural := 2;
 
     -- Simulate Avalon write
     procedure AvalonWrite(
@@ -231,6 +243,25 @@ stimulus: process
         report "IRQ ImageStart not masked" severity failure;
     end procedure TEST_InterruptMask;
 
+    -- Enable output signals test case
+    procedure TEST_EnableOut is
+    begin
+        AvalonWrite(REG_CR, to_unsigned(PERIPH_EN, 32));
+        wait for clk_period;
+        assert CameraIfEnable = '1' and MasterEnable = '1'
+        report "Peripheral not enabled" severity failure;
+        assert Camera_nReset = '0'
+        report "Camera not disabled" severity failure;
+
+        AvalonWrite(REG_CR, to_unsigned(CAM_EN, 32));
+        wait for clk_period;
+        assert CameraIfEnable = '0' and MasterEnable = '0'
+        report "Peripheral not disabled" severity failure;
+        assert Camera_nReset = '1'
+        report "Camera not enabled" severity failure;
+    end procedure TEST_EnableOut;
+
+    -- Reset UUT to normal state
     procedure TEST_RESET is
     begin
         -- init values
@@ -253,23 +284,22 @@ stimulus: process
 begin -- TEST PROCESS
     report "START TESTBENCH" & LF;
 
-    report "TEST_ImageAddress";
     TEST_RESET;
     TEST_ImageAddress;
 
-    report "TEST_Avalon";
     TEST_RESET;
     TEST_Avalon;
 
-    report "TEST_InterruptSetClear";
     TEST_RESET;
     TEST_InterruptSetClear;
 
-    report "TEST_InterruptMask";
     TEST_RESET;
     TEST_InterruptMask;
 
-    report "DONE" & LF;
+    TEST_RESET;
+    TEST_EnableOut;
+
+    report "DONE" & LF & ">> OK" & LF;
     -- Stop the clock and hence terminate the simulation
     sim_ended <= '1';
     wait;
