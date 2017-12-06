@@ -48,6 +48,7 @@ begin
 
             elsif rising_edge(Clk) then
                 ReadData <= (others => '0'); -- default value
+                AddressUpdate <= '0';
                 -- Read registers
                 if ChipSelect = '1' and Read = '1' then
                     case Address(1 downto 0) is
@@ -57,8 +58,6 @@ begin
                         when "11" => ReadData <= iImageAddressRegister;
                         when others => null;
                     end case;
-
-                AddressUpdate <= '0';
                 -- Write registers
                 elsif ChipSelect = '1' and Write = '1' then -- Write cycle
                     case Address(1 downto 0) is
@@ -76,7 +75,7 @@ begin
         end process;
 
     -- Interrupt logic
-    pRegRd: process(Clk, nReset)
+    pInt: process(Clk, nReset)
         begin
             if nReset = '0' then
                 Irq <= '0';
