@@ -77,9 +77,10 @@ stimulus: process
     constant REG_ISR: std_logic_vector(1 DOWNTO 0) := "10";
     constant REG_IAR: std_logic_vector(1 DOWNTO 0) := "11";
 
+    -- ISR bit mask
     constant END_IRQ: natural := 1;
     constant START_IRQ: natural := 2;
-
+    -- CR bit mask
     constant PERIPH_EN: natural := 1;
     constant CAM_EN: natural := 2;
 
@@ -261,7 +262,7 @@ stimulus: process
         report "Camera not enabled" severity failure;
     end procedure TEST_EnableOut;
 
-    -- Reset UUT to normal state
+    -- Reset UUT
     procedure TEST_RESET is
     begin
         -- init values

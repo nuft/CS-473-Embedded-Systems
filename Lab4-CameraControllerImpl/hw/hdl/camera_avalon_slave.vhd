@@ -18,7 +18,7 @@ Port(
     Irq             : OUT std_logic;
     ImageAddress    : OUT std_logic_vector (31 DOWNTO 0);
     AddressUpdate   : OUT std_logic;
-    CameraIfEnable: OUT std_logic;
+    CameraIfEnable  : OUT std_logic;
     MasterEnable    : OUT std_logic;
     Camera_nReset   : OUT std_logic;
 
