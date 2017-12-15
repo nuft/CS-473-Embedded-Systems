@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use std.textio.all;
 
 entity camera_interface_tb is
 end camera_interface_tb;
@@ -58,6 +59,46 @@ begin
 
     stimulus : process
 
+    -- to string functions
+    function to_bstring(sl : std_logic) return string is
+        variable sl_str_v : string(1 to 3);  -- std_logic image with quotes around
+    begin
+        sl_str_v := std_logic'image(sl);
+        return "" & sl_str_v(2);  -- "" & character to get string
+    end function;
+
+    function to_bstring(slv : std_logic_vector) return string is
+        alias    slv_norm : std_logic_vector(1 to slv'length) is slv;
+        variable sl_str_v : string(1 to 1);  -- String of std_logic
+        variable res_v    : string(1 to slv'length);
+    begin
+        for idx in slv_norm'range loop
+            sl_str_v := to_bstring(slv_norm(idx));
+            res_v(idx) := sl_str_v(1);
+        end loop;
+        return res_v;
+    end function;
+
+    procedure TEST_BayerToRGB is
+    begin
+        LValid <= '1';
+        FValid <= '1';
+
+        CamData <= "10101"; -- blue
+        LineFIFOData <= "11111"; -- green1
+        wait for clk_period;
+        CamData <= "00001"; -- green2
+        LineFIFOData <= "11100"; -- red
+        wait for clk_period;
+
+        assert unsigned(PixelData) = B"11100_100000_10101"
+        report "ASSERT FAILED"  & LF &
+               "PixelData = " & to_bstring(PixelData) & LF &
+               "Expected:   " & B"11100_100000_10101"
+               severity failure;
+
+    end procedure TEST_BayerToRGB;
+
     -- Reset UUT
     procedure TEST_RESET is
     begin
@@ -80,11 +121,21 @@ begin
         report "START TESTBENCH" & LF;
 
         TEST_RESET;
+        -- TEST_BayerToRGB;
+
+        LValid <= '1';
+        FValid <= '1';
+        wait for 4 * clk_period;
+        LValid <= '0';
+        wait for 2 * clk_period;
+        LValid <= '1';
+        wait for 4 * clk_period;
+        LValid <= '0';
+        FValid <= '0';
 
         wait for 10 * clk_period;
 
         report "DONE" & LF & ">> OK" & LF;
-
         -- Stop the clock and hence terminate the simulation
         sim_ended <= '1';
         wait;

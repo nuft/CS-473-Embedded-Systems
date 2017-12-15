@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 Entity camera_interface is
 Port(
@@ -35,12 +36,14 @@ Architecture comp of camera_interface is
         IDLE,
         LBUFFER,
         LPROCESS,
-        LSKIP
+        LSKIP1,
+        LSKIP2
     );
     signal LineState    : LineStateType;
-begin
-    LineState <= LPROCESS; -- TODO: pLineFSM
 
+    signal BlueCache : std_logic_vector(4 DOWNTO 0);
+    signal GreenCache : std_logic_vector(4 DOWNTO 0);
+begin
     pBayerFSM: process(Clk, nReset)
     begin
         if nReset = '0' then
@@ -54,11 +57,40 @@ begin
                     when IDLE =>
                         BayerState <= BLUE;
                     when BLUE =>
+                        BlueCache <= CamData;
+                        GreenCache <= LineFIFOData;
                         BayerState <= RED;
                     when RED =>
+                        PixelData(15 DOWNTO 11) <= LineFIFOData;
+                        PixelData(4 DOWNTO 0) <= BlueCache;
+                        PixelData(10 DOWNTO 5) <= std_logic_vector(
+                                                    unsigned('0' & GreenCache)
+                                                  + unsigned(CamData)
+                                                );
                         BayerState <= BLUE;
                 end case;
             end if;
+        end if;
+    end process;
+
+    pLineFSM: process(Clk, nReset)
+    variable last_lvalid: std_logic;
+    begin
+        if nReset = '0' or FValid = '0' then
+            last_lvalid := '0';
+            LineState <= IDLE;
+        elsif rising_edge(Clk) then
+            -- rising edge of LValid
+            if (LValid and not last_lvalid) = '1' then
+                case LineState is
+                    when IDLE       => LineState <= LBUFFER;
+                    when LBUFFER    => LineState <= LPROCESS;
+                    when LPROCESS   => LineState <= LSKIP1;
+                    when LSKIP1     => LineState <= LSKIP2;
+                    when LSKIP2     => LineState <= LBUFFER;
+                end case;
+            end if;
+            last_lvalid := LValid;
         end if;
     end process;
 
