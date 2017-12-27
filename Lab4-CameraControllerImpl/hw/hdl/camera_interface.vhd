@@ -20,7 +20,8 @@ Port(
 
     -- output signals
     PixelDatawreq   : OUT std_logic;
-    PixelData       : OUT std_logic_vector (15 DOWNTO 0)
+    PixelData       : OUT std_logic_vector (15 DOWNTO 0);
+    AddressUpdate   : OUT std_logic
 );
 End camera_interface;
 
@@ -33,13 +34,14 @@ Architecture comp of camera_interface is
     signal BayerState   : BayerStateType;
 
     type LineStateType is (
-        IDLE,
         LBUFFER,
         LPROCESS,
         LSKIP1,
         LSKIP2
     );
     signal LineState    : LineStateType;
+
+    signal BayerActive  : std_logic;
 
     signal BlueCache : std_logic_vector(4 DOWNTO 0);
     signal GreenCache : std_logic_vector(4 DOWNTO 0);
@@ -50,7 +52,7 @@ begin
             BayerState <= IDLE;
             PixelData(1 DOWNTO 0) <= (others => '0');
         elsif rising_edge(Clk) then
-            if LineState /= LPROCESS then
+            if BayerActive = '0' then
                 BayerState <= IDLE;
             else
                 case BayerState is
@@ -73,17 +75,21 @@ begin
         end if;
     end process;
 
+    BayerActive <= '1' when LValid = '1' and
+                            FValid = '1' and
+                            LineState = LPROCESS
+                            else '0';
+
     pLineFSM: process(Clk, nReset)
     variable last_lvalid: std_logic;
     begin
         if nReset = '0' or FValid = '0' then
             last_lvalid := '0';
-            LineState <= IDLE;
+            LineState <= LBUFFER;
         elsif rising_edge(Clk) then
-            -- rising edge of LValid
-            if (LValid and not last_lvalid) = '1' then
+            -- falling edge of LValid
+            if (not LValid and last_lvalid) = '1' then
                 case LineState is
-                    when IDLE       => LineState <= LBUFFER;
                     when LBUFFER    => LineState <= LPROCESS;
                     when LPROCESS   => LineState <= LSKIP1;
                     when LSKIP1     => LineState <= LSKIP2;
@@ -91,6 +97,24 @@ begin
                 end case;
             end if;
             last_lvalid := LValid;
+        end if;
+    end process;
+
+
+    pFrameStart: process(Clk, nReset)
+    variable last_fvalid: std_logic;
+    begin
+        if nReset = '0' or FValid = '0' then
+            last_fvalid := '0';
+            AddressUpdate <= '0';
+        elsif rising_edge(Clk) then
+            -- rising edge of FValid
+            if (FValid and not last_fvalid) = '1' then
+                AddressUpdate <= '1';
+            else
+                AddressUpdate <= '0';
+            end if;
+            last_fvalid := FValid;
         end if;
     end process;
 

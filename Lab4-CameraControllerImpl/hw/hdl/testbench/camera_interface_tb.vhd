@@ -19,7 +19,8 @@ architecture tb of camera_interface_tb is
               LineFIFOData  : in std_logic_vector (4 DOWNTO 0);
               LineFIFOempty : in std_logic;
               PixelDatawreq : out std_logic;
-              PixelData     : out std_logic_vector (15 downto 0));
+              PixelData     : out std_logic_vector (15 downto 0);
+              AddressUpdate : out std_logic);
     end component;
 
     signal Clk           : std_logic;
@@ -33,6 +34,7 @@ architecture tb of camera_interface_tb is
     signal LineFIFOempty : std_logic;
     signal PixelDatawreq : std_logic;
     signal PixelData     : std_logic_vector (15 downto 0);
+    signal AddressUpdate : std_logic;
 
     constant clk_period : time := 20 ns;
     signal tb_clk : std_logic := '0';
@@ -51,7 +53,8 @@ begin
               LineFIFOData  => LineFIFOData,
               LineFIFOempty => LineFIFOempty,
               PixelDatawreq => PixelDatawreq,
-              PixelData     => PixelData);
+              PixelData     => PixelData,
+              AddressUpdate => AddressUpdate);
 
     -- Clock generation
     tb_clk <= not tb_clk after clk_period/2 when sim_ended /= '1' else '0';
@@ -123,12 +126,16 @@ begin
         TEST_RESET;
         -- TEST_BayerToRGB;
 
-        LValid <= '1';
         FValid <= '1';
+        wait until falling_edge(clk);
+        LValid <= '1';
+        wait until rising_edge(clk);
         wait for 4 * clk_period;
         LValid <= '0';
         wait for 2 * clk_period;
+        wait until falling_edge(clk);
         LValid <= '1';
+        wait until rising_edge(clk);
         wait for 4 * clk_period;
         LValid <= '0';
         FValid <= '0';
