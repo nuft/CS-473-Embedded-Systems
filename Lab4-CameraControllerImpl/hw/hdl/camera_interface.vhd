@@ -35,9 +35,9 @@ Architecture comp of camera_interface is
 
     type PixelStateType is (
         IDLE,
-        PIXEL_PROCESS,
-        PIXEL_OUTPUT,
-        PIXEL_SKIP
+        PPROCESS,
+        POUTPUT,
+        PSKIP
     );
     signal PixelState   : PixelStateType;
 
@@ -52,10 +52,9 @@ Architecture comp of camera_interface is
     signal BayerActive  : std_logic;
 
     signal CamDataBuf : std_logic_vector(4 DOWNTO 0);
-    signal LValidBuf  : std_logic;
-    signal FValidBuf  : std_logic;
     signal BlueCache : std_logic_vector(4 DOWNTO 0);
     signal GreenCache : std_logic_vector(4 DOWNTO 0);
+
 begin
     pBayerFSM: process(Clk, nReset)
     begin
@@ -63,44 +62,56 @@ begin
             BayerState <= IDLE;
             LineFIFOrreq <= '0';
 
-            PixelData(1 DOWNTO 0) <= (others => '0');
+            PixelData <= (others => '0');
             PixelState <= IDLE;
+
+            BlueCache <= (others => '0');
+            GreenCache <= (others => '0');
         elsif rising_edge(Clk) then
             CamDataBuf <= CamData;
-            LValidBuf <= LValid;
-            FValidBuf <= FValid;
-            if BayerActive = '0' then
-                BayerState <= IDLE;
-                LineFIFOrreq <= '0';
-            else
-                case BayerState is
-                    when IDLE =>
+            case BayerState is
+                when IDLE =>
+                    if BayerActive = '0' then
+                        BayerState <= IDLE;
+                        LineFIFOrreq <= '0';
+                    else
                         BayerState <= BLUE;
                         LineFIFOrreq <= '1';
-                    when BLUE =>
-                        BlueCache <= CamDataBuf;
-                        GreenCache <= LineFIFOData;
-                        BayerState <= RED;
-                    when RED =>
-                        PixelData(15 DOWNTO 11) <= LineFIFOData;
-                        PixelData(4 DOWNTO 0) <= BlueCache;
-                        PixelData(10 DOWNTO 5) <= std_logic_vector(
-                                                    unsigned('0' & GreenCache)
-                                                  + unsigned(CamDataBuf)
-                                                );
+                    end if;
+                when BLUE =>
+                    BlueCache <= CamDataBuf;
+                    GreenCache <= LineFIFOData;
+                    BayerState <= RED;
+                when RED =>
+                    PixelData(15 DOWNTO 11) <= LineFIFOData;
+                    PixelData(4 DOWNTO 0) <= BlueCache;
+                    PixelData(10 DOWNTO 5) <= std_logic_vector(
+                                                unsigned('0' & GreenCache)
+                                              + unsigned(CamDataBuf)
+                                            );
+                    if BayerActive = '0' then
+                        BayerState <= IDLE;
+                        LineFIFOrreq <= '0';
+                    else
                         BayerState <= BLUE;
-                end case;
-            end if;
+                    end if;
+            end case;
 
+            PixelDatawreq <= '0'; -- default
             case PixelState is
                 when IDLE =>
+                    if BayerActive = '0' then
+                        PixelState <= IDLE;
+                    else
+                        PixelState <= PPROCESS;
+                    end if;
+                when PPROCESS =>
+                    PixelState <= POUTPUT;
+                when POUTPUT =>
+                    PixelDatawreq <= '1';
+                    PixelState <= PSKIP;
+                when PSKIP =>
                     PixelState <= IDLE;
-                when PIXEL_PROCESS =>
-                    PixelState <= PIXEL_PROCESS;
-                when PIXEL_OUTPUT =>
-                    PixelState <= PIXEL_OUTPUT;
-                when PIXEL_SKIP =>
-                    PixelState <= PIXEL_SKIP;
             end case;
 
         end if;
@@ -122,14 +133,19 @@ begin
         if nReset = '0' or FValid = '0' then
             last_lvalid := '0';
             LineState <= LBUFFER;
+            LineFIFOclear <= '0';
         elsif rising_edge(Clk) then
             -- falling edge of LValid
             if (not LValid and last_lvalid) = '1' then
+                LineFIFOclear <= '0'; -- default
                 case LineState is
-                    when LBUFFER    => LineState <= LPROCESS;
-                    when LPROCESS   => LineState <= LSKIP1;
-                    when LSKIP1     => LineState <= LSKIP2;
-                    when LSKIP2     => LineState <= LBUFFER;
+                    when LBUFFER => LineState <= LPROCESS;
+                    when LPROCESS => LineState <= LSKIP1;
+                    when LSKIP1 =>
+                        LineFIFOclear <= '1';
+                        LineState <= LSKIP2;
+                    when LSKIP2 =>
+                        LineState <= LBUFFER;
                 end case;
             end if;
             last_lvalid := LValid;
