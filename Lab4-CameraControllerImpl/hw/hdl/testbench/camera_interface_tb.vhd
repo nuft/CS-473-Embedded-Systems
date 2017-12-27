@@ -148,6 +148,84 @@ begin
         LValid <= '0';
     end procedure simPixelLine;
 
+    -- Simulate pixel line pair
+    procedure simPixelLine(
+        constant fifo0: natural;
+        constant fifo1: natural;
+        constant fifo2: natural;
+        constant fifo3: natural;
+        constant fifo4: natural;
+        constant fifo5: natural;
+        constant fifo6: natural;
+        constant fifo7: natural;
+
+        constant d0: natural;
+        constant d1: natural;
+        constant d2: natural;
+        constant d3: natural;
+        constant d4: natural;
+        constant d5: natural;
+        constant d6: natural;
+        constant d7: natural) is
+    begin
+        wait until falling_edge(tb_clk);
+        LValid <= '1';
+        CamData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo1, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo2, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo3, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo4, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo5, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo6, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo7, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '0';
+
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '1';
+        CamData <= std_logic_vector(to_unsigned(d0, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d1, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo1, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d2, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo2, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d3, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo3, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d4, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo4, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d5, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo5, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d6, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo6, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d7, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo7, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '0';
+    end procedure simPixelLine;
+
     procedure TEST_BayerToRGB is
     begin
         LValid <= '1';
@@ -199,8 +277,12 @@ begin
         --FValid <= '0';
 
         FValid <= '1';
-        simPixelLine(1,2,3,4, 5,6,7,8);
-        simPixelLine(0,0,0,0, 0,0,0,0); -- skip line
+        --simPixelLine(1,2,3,4, 5,6,7,8);
+        --simPixelLine(0,0,0,0, 0,0,0,0); -- skip line
+        simPixelLine(1,2,3,4,5,6,7, 8,9,10,11,12,13,14,15,16);
+        simPixelLine(0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0); -- skip line
+        simPixelLine(1,2,3,4,5,6,7, 8,9,10,11,12,13,14,15,16);
+        simPixelLine(0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0); -- skip line
         FValid <= '0';
 
         wait for 10 * clk_period;
