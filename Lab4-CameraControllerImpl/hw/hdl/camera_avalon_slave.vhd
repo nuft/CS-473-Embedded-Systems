@@ -17,7 +17,6 @@ Port(
     -- output signals
     Irq             : OUT std_logic;
     ImageAddress    : OUT std_logic_vector (31 DOWNTO 0);
-    AddressUpdate   : OUT std_logic;
     CameraIfEnable  : OUT std_logic;
     MasterEnable    : OUT std_logic;
     Camera_nReset   : OUT std_logic;
@@ -38,34 +37,25 @@ begin
     -- Register write
     pRegWr: process(Clk, nReset)
     begin
+        ImageAddress <= iRegImageAddress;
         if nReset = '0' then
             -- Register reset values
             iRegControl <= (others => '0');
             iRegInterruptMask <= (others => '0');
             iRegInterruptStatus <= (others => '0');
             iRegImageAddress <= (others => '0');
-
-            -- output signals
-            ImageAddress <= (others => '0');
-            AddressUpdate <= '0';
-
         elsif rising_edge(Clk) then
-            -- default values
-            AddressUpdate <= '0';
-
             -- set Interrupt Status Register on interrupt signals
             iRegInterruptStatus <= iRegInterruptStatus or (ImageStartIrq & ImageEndIrq);
 
             -- Write registers
             if ChipSelect = '1' and Write = '1' then -- Write cycle
+                -- TODO: ignore when byteenable /= "0000"
                 case Address(1 downto 0) is
                     when "00" => iRegControl <= WriteData(1 DOWNTO 0);
                     when "01" => iRegInterruptMask <= WriteData(1 DOWNTO 0);
                     when "10" => iRegInterruptStatus <= iRegInterruptStatus and not WriteData(1 DOWNTO 0);
-                    when "11" =>
-                        iRegImageAddress <= WriteData;
-                        ImageAddress <= WriteData;
-                        AddressUpdate <= '1';
+                    when "11" => iRegImageAddress <= WriteData;
                     when others => null;
                 end case;
             end if;

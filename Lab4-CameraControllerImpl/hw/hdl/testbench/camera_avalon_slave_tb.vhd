@@ -18,7 +18,6 @@ architecture tb of camera_avalon_slave_tb is
               WriteData     : in std_logic_vector (31 downto 0);
               Irq           : out std_logic;
               ImageAddress  : out std_logic_vector (31 downto 0);
-              AddressUpdate : out std_logic;
               CameraIfEnable: out std_logic;
               MasterEnable  : out std_logic;
               Camera_nReset : out std_logic;
@@ -36,7 +35,6 @@ architecture tb of camera_avalon_slave_tb is
     signal WriteData     : std_logic_vector (31 downto 0);
     signal Irq           : std_logic;
     signal ImageAddress  : std_logic_vector (31 downto 0);
-    signal AddressUpdate : std_logic;
     signal CameraIfEnable: std_logic;
     signal MasterEnable  : std_logic;
     signal Camera_nReset : std_logic;
@@ -60,7 +58,6 @@ begin
               WriteData     => WriteData,
               Irq           => Irq,
               ImageAddress  => ImageAddress,
-              AddressUpdate => AddressUpdate,
               CameraIfEnable=> CameraIfEnable,
               MasterEnable  => MasterEnable,
               Camera_nReset => Camera_nReset,
@@ -123,24 +120,6 @@ stimulus: process
         AvalonWrite(REG_IAR, to_unsigned(16#c0ffee#, 32));
         assert unsigned(ImageAddress) = 16#c0ffee#
         report "Does not keep ImageAddress" severity failure;
-
-        -- check Address update
-        wait for clk_period;
-        Address <= REG_IAR;
-        ChipSelect <= '1';
-        WriteData <= std_logic_vector(to_unsigned(42, WriteData'length));
-        Write <= '1';
-        wait for clk_period / 2;
-        assert AddressUpdate = '1'
-        report "AddressUpdate not signaled" severity failure;
-        wait for clk_period / 2;
-        Write <= '0';
-        ChipSelect <= '0';
-        WriteData <= std_logic_vector(to_unsigned(0, WriteData'length));
-        wait for clk_period / 2;
-        assert AddressUpdate = '0'
-        report "AddressUpdate not cleared" severity failure;
-        wait until rising_edge(tb_clk);
     end procedure TEST_ImageAddress;
 
     procedure TEST_Avalon is
