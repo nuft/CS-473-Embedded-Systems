@@ -16,7 +16,7 @@ Port(
     LineFIFOrreq    : OUT std_logic;
     LineFIFOwreq    : OUT std_logic;
     LineFIFOData    : IN std_logic_vector (4 DOWNTO 0);
-    LineFIFOempty   : IN std_logic;
+    LineFIFOclear   : OUT std_logic;
 
     -- output signals
     PixelDatawreq   : OUT std_logic;
@@ -33,6 +33,14 @@ Architecture comp of camera_interface is
     );
     signal BayerState   : BayerStateType;
 
+    type PixelStateType is (
+        IDLE,
+        PIXEL_PROCESS,
+        PIXEL_OUTPUT,
+        PIXEL_SKIP
+    );
+    signal PixelState   : PixelStateType;
+
     type LineStateType is (
         LBUFFER,
         LPROCESS,
@@ -43,6 +51,9 @@ Architecture comp of camera_interface is
 
     signal BayerActive  : std_logic;
 
+    signal CamDataBuf : std_logic_vector(4 DOWNTO 0);
+    signal LValidBuf  : std_logic;
+    signal FValidBuf  : std_logic;
     signal BlueCache : std_logic_vector(4 DOWNTO 0);
     signal GreenCache : std_logic_vector(4 DOWNTO 0);
 begin
@@ -50,16 +61,24 @@ begin
     begin
         if nReset = '0' then
             BayerState <= IDLE;
+            LineFIFOrreq <= '0';
+
             PixelData(1 DOWNTO 0) <= (others => '0');
+            PixelState <= IDLE;
         elsif rising_edge(Clk) then
+            CamDataBuf <= CamData;
+            LValidBuf <= LValid;
+            FValidBuf <= FValid;
             if BayerActive = '0' then
                 BayerState <= IDLE;
+                LineFIFOrreq <= '0';
             else
                 case BayerState is
                     when IDLE =>
                         BayerState <= BLUE;
+                        LineFIFOrreq <= '1';
                     when BLUE =>
-                        BlueCache <= CamData;
+                        BlueCache <= CamDataBuf;
                         GreenCache <= LineFIFOData;
                         BayerState <= RED;
                     when RED =>
@@ -67,17 +86,34 @@ begin
                         PixelData(4 DOWNTO 0) <= BlueCache;
                         PixelData(10 DOWNTO 5) <= std_logic_vector(
                                                     unsigned('0' & GreenCache)
-                                                  + unsigned(CamData)
+                                                  + unsigned(CamDataBuf)
                                                 );
                         BayerState <= BLUE;
                 end case;
             end if;
+
+            case PixelState is
+                when IDLE =>
+                    PixelState <= IDLE;
+                when PIXEL_PROCESS =>
+                    PixelState <= PIXEL_PROCESS;
+                when PIXEL_OUTPUT =>
+                    PixelState <= PIXEL_OUTPUT;
+                when PIXEL_SKIP =>
+                    PixelState <= PIXEL_SKIP;
+            end case;
+
         end if;
     end process;
 
     BayerActive <= '1' when LValid = '1' and
                             FValid = '1' and
                             LineState = LPROCESS
+                            else '0';
+
+    LineFIFOwreq <= '1' when LValid = '1' and
+                            FValid = '1' and
+                            LineState = LBUFFER
                             else '0';
 
     pLineFSM: process(Clk, nReset)

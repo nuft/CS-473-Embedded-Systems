@@ -16,8 +16,8 @@ architecture tb of camera_interface_tb is
               FValid        : in std_logic;
               LineFIFOrreq  : out std_logic;
               LineFIFOwreq  : out std_logic;
+              LineFIFOclear  : out std_logic;
               LineFIFOData  : in std_logic_vector (4 DOWNTO 0);
-              LineFIFOempty : in std_logic;
               PixelDatawreq : out std_logic;
               PixelData     : out std_logic_vector (15 downto 0);
               AddressUpdate : out std_logic);
@@ -30,8 +30,8 @@ architecture tb of camera_interface_tb is
     signal FValid        : std_logic;
     signal LineFIFOrreq  : std_logic;
     signal LineFIFOwreq  : std_logic;
+    signal LineFIFOclear  : std_logic;
     signal LineFIFOData  : std_logic_vector (4 DOWNTO 0);
-    signal LineFIFOempty : std_logic;
     signal PixelDatawreq : std_logic;
     signal PixelData     : std_logic_vector (15 downto 0);
     signal AddressUpdate : std_logic;
@@ -50,8 +50,8 @@ begin
               FValid        => FValid,
               LineFIFOrreq  => LineFIFOrreq,
               LineFIFOwreq  => LineFIFOwreq,
+              LineFIFOclear => LineFIFOclear,
               LineFIFOData  => LineFIFOData,
-              LineFIFOempty => LineFIFOempty,
               PixelDatawreq => PixelDatawreq,
               PixelData     => PixelData,
               AddressUpdate => AddressUpdate);
@@ -82,6 +82,72 @@ begin
         return res_v;
     end function;
 
+    -- Simulate line
+    procedure simLine(
+        constant d0: natural;
+        constant d1: natural;
+        constant d2: natural;
+        constant d3: natural) is
+    begin
+        wait until falling_edge(tb_clk);
+        LValid <= '1';
+        CamData <= std_logic_vector(to_unsigned(d0, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d1, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d2, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d3, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '0';
+    end procedure simLine;
+
+    -- Simulate pixel line pair
+    procedure simPixelLine(
+        constant fifo0: natural;
+        constant fifo1: natural;
+        constant fifo2: natural;
+        constant fifo3: natural;
+
+        constant d0: natural;
+        constant d1: natural;
+        constant d2: natural;
+        constant d3: natural) is
+    begin
+        wait until falling_edge(tb_clk);
+        LValid <= '1';
+        CamData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo1, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo2, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(fifo3, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '0';
+
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '1';
+        CamData <= std_logic_vector(to_unsigned(d0, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d1, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo1, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d2, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo2, CamData'length));
+        wait until falling_edge(tb_clk);
+        CamData <= std_logic_vector(to_unsigned(d3, CamData'length));
+        wait until rising_edge(tb_clk);
+        LineFIFOData <= std_logic_vector(to_unsigned(fifo3, CamData'length));
+        wait until falling_edge(tb_clk);
+        LValid <= '0';
+    end procedure simPixelLine;
+
     procedure TEST_BayerToRGB is
     begin
         LValid <= '1';
@@ -110,7 +176,6 @@ begin
         LValid <= '0';
         FValid <= '0';
         LineFIFOData <= (others => '0');
-        LineFIFOempty <= '0';
 
         -- RESET generation
         wait for clk_period/4;
@@ -126,18 +191,16 @@ begin
         TEST_RESET;
         -- TEST_BayerToRGB;
 
+        --FValid <= '1';
+        --simLine(1,2,3,4);
+        --simLine(5,6,7,8);
+        --simLine(1,2,3,4);
+        --simLine(5,6,7,8);
+        --FValid <= '0';
+
         FValid <= '1';
-        wait until falling_edge(clk);
-        LValid <= '1';
-        wait until rising_edge(clk);
-        wait for 4 * clk_period;
-        LValid <= '0';
-        wait for 2 * clk_period;
-        wait until falling_edge(clk);
-        LValid <= '1';
-        wait until rising_edge(clk);
-        wait for 4 * clk_period;
-        LValid <= '0';
+        simPixelLine(1,2,3,4, 5,6,7,8);
+        simPixelLine(0,0,0,0, 0,0,0,0); -- skip line
         FValid <= '0';
 
         wait for 10 * clk_period;
