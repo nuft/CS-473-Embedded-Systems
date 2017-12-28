@@ -1,0 +1,27 @@
+# Lab4 TODO
+
+## Software
+[ ] Camera driver API
+[ ] Camera driver implementation
+[ ] Camera I2C config
+[ ] Image test
+[ ] simple demo using polling
+[ ] use interrupts
+[ ] Buffer handling
+
+## HDL
+[ ] implement end of image interrupt
+[ ] remove start of image interrupt
+
+## Quartus
+[ ] I2C
+[ ] PLL
+[ ] FIFO
+[ ] integrate subcomponents in one HDL IP
+[ ] address span expander
+[ ] Port map in top level
+
+## Report
+[ ] document that only 32bit write supported by avalon slave
+[ ] changelog
+[ ] simulation plots
