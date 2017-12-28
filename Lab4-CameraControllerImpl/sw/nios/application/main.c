@@ -1,7 +1,17 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#include "i2c/i2c.h"
+#include "camera.h"
+
+/* I2C defines */
+#define I2C_FREQ    (50000000) /* Clock frequency driving the i2c core: 50 MHz in this example (ADAPT TO YOUR DESIGN) */
+#define I2C_BASE    (0x0000)   /* i2c base address from system.h (ADAPT TO YOUR DESIGN) */
+
+uint16_t image_buffer[IMAGE_HEIGHT*IMAGE_WIDTH];
 
 void delay(uint64_t n)
 {
@@ -41,11 +51,40 @@ bool dump_image(const void *addr)
 
 int main(void)
 {
+    printf("I2C init\n");
+    i2c_dev i2c = i2c_inst((void *) I2C_BASE);
+    i2c_init(&i2c, I2C_FREQ);
+
+    /* clear image buffer */
+    memset(image_buffer, 0, sizeof(image_buffer));
+
+    /* Camaera reset cycle */
+    printf("Camera reset\n");
     camera_disable();
     delay(1000000);
     camera_enable();
 
-    camera_start(image_buffer, end_irq);
+#if TEST
+    printf("Camera setup\n");
+    camera_setup(&i2c, image_buffer, NULL, NULL);
+    camera_dump_regs();
+    camera_disable();
+
+#else
+    printf("Camera setup\n");
+    camera_setup(&i2c, image_buffer, NULL, NULL);
+
+    /* Wait until done*/
+    printf("Camera wait for image... ");
+    while(!camera_image_received());
+    printf("DONE");
+    camera_clear_irq_flag();
+    camera_disable();
+    printf("Camera disable\n");
+
+    printf("Dump image\n");
+    dump_image(image_buffer);
+#endif
 
     while (1) {
         ;
