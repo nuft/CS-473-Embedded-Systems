@@ -111,7 +111,40 @@ void camera_set_frame_buffer(void *buf);
 
 void camera_dump_regs(void)
 {
-
+    printf("CHIP_VERSION = %4hx\n", read_reg(CHIP_VERSION));
+    printf("ROW_START = %4hx\n", read_reg(ROW_START));
+    printf("COLUMN_STAR = %4hx\n", read_reg(COLUMN_STAR));
+    printf("ROW_SIZE = %4hx\n", read_reg(ROW_SIZE));
+    printf("COLUMN_SIZE = %4hx\n", read_reg(COLUMN_SIZE));
+    printf("HORIZONTAL_BLANK = %4hx\n", read_reg(HORIZONTAL_BLANK));
+    printf("VERTICAL_BLANK = %4hx\n", read_reg(VERTICAL_BLANK));
+    printf("OUTPUT_CONTROL = %4hx\n", read_reg(OUTPUT_CONTROL));
+    printf("SHUTTER_WIDTH_UPPER = %4hx\n", read_reg(SHUTTER_WIDTH_UPPER));
+    printf("SHUTTER_WIDTH_LOWER = %4hx\n", read_reg(SHUTTER_WIDTH_LOWER));
+    printf("PIXEL_CLOCK_CONTROL = %4hx\n", read_reg(PIXEL_CLOCK_CONTROL));
+    printf("RESTART = %4hx\n", read_reg(RESTART));
+    printf("SHUTTER_DELAY = %4hx\n", read_reg(SHUTTER_DELAY));
+    printf("RESET = %4hx\n", read_reg(RESET));
+    printf("PLL_CONTROL = %4hx\n", read_reg(PLL_CONTROL));
+    printf("PLL_CONFIG_1 = %4hx\n", read_reg(PLL_CONFIG_1));
+    printf("PLL_CONFIG_2 = %4hx\n", read_reg(PLL_CONFIG_2));
+    printf("READ_MODE_1 = %4hx\n", read_reg(READ_MODE_1));
+    printf("READ_MODE_2 = %4hx\n", read_reg(READ_MODE_2));
+    printf("ROW_ADDRESS_MO = %4hx\n", read_reg(ROW_ADDRESS_MO));
+    printf("COLUMN_ADDRESS_M = %4hx\n", read_reg(COLUMN_ADDRESS_M));
+    printf("GREEN1_GAIN = %4hx\n", read_reg(GREEN1_GAIN));
+    printf("BLUE_GAIN = %4hx\n", read_reg(BLUE_GAIN));
+    printf("RED_GAIN = %4hx\n", read_reg(RED_GAIN));
+    printf("GREEN2_GAIN = %4hx\n", read_reg(GREEN2_GAIN));
+    printf("GLOBAL_GAIN = %4hx\n", read_reg(GLOBAL_GAIN));
+    printf("ROW_BLACK_TARGE = %4hx\n", read_reg(ROW_BLACK_TARGE));
+    printf("ROW_BLACK_DEFAULT_O = %4hx\n", read_reg(ROW_BLACK_DEFAULT_O));
+    printf("TEST_PATTERN_CONTROL = %4hx\n", read_reg(TEST_PATTERN_CONTROL));
+    printf("TEST_PATTERN_GREEN = %4hx\n", read_reg(TEST_PATTERN_GREEN));
+    printf("TEST_PATTERN_RED = %4hx\n", read_reg(TEST_PATTERN_RED));
+    printf("TEST_PATTERN_BLUE = %4hx\n", read_reg(TEST_PATTERN_BLUE));
+    printf("TEST_PATTERN_BAR_WIDTH = %4hx\n", read_reg(TEST_PATTERN_BAR_WIDTH));
+    printf("CHIP_VERSION_ALT = %4hx\n", read_reg(CHIP_VERSION_ALT));
 }
 
 int main(void)
