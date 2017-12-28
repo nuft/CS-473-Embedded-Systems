@@ -60,6 +60,8 @@ architecture top_level of cam_component is
      --master to slave
      signal MasterIdle		: std_logic;
 	
+     -- to slave
+     signal ImageEndIrq     : std_logic;
 begin
 	SLAVE: entity work.camera_avalon_slave
 		port map (
@@ -141,5 +143,21 @@ begin
 				--locked => locked
 		);
 		
+    pEndIrq: process(Clk, nReset)
+    variable last_fvalid: std_logic;
+    begin
+        if nReset = '0' then
+            last_fvalid := '0';
+        elsif rising_edge(Clk) then
+            -- falling edge of FValid
+            if (not FValid and last_fvalid) = '1' then
+                ImageEndIrq <= '1';
+            else
+                ImageEndIrq <= '0';
+            end if;
+            last_fvalid := FValid;
+        end if;
+    end process;
+
 end architecture top_level;
 	
