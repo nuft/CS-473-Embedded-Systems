@@ -21,7 +21,6 @@ Port(
     Camera_nReset   : OUT std_logic;
 
     -- Input signals
-    ImageStartIrq   : IN std_logic;
     ImageEndIrq     : IN std_logic
 );
 End camera_avalon_slave;
@@ -29,8 +28,8 @@ End camera_avalon_slave;
 Architecture comp of camera_avalon_slave is
 -- signals for register access
    signal   iRegControl        :  std_logic_vector (1 DOWNTO 0);
-   signal   iRegInterruptMask  :  std_logic_vector (1 DOWNTO 0);
-   signal   iRegInterruptStatus:  std_logic_vector (1 DOWNTO 0);
+   signal   iRegInterruptMask  :  std_logic;
+   signal   iRegInterruptStatus:  std_logic;
    signal   iRegImageAddress   :  std_logic_vector (31 DOWNTO 0);
 begin
     -- Register write
@@ -40,20 +39,20 @@ begin
         if nReset = '0' then
             -- Register reset values
             iRegControl <= (others => '0');
-            iRegInterruptMask <= (others => '0');
-            iRegInterruptStatus <= (others => '0');
+            iRegInterruptMask <= '0';
+            iRegInterruptStatus <= '0';
             iRegImageAddress <= (others => '0');
         elsif rising_edge(Clk) then
             -- set Interrupt Status Register on interrupt signals
-            iRegInterruptStatus <= iRegInterruptStatus or (ImageStartIrq & ImageEndIrq);
+            iRegInterruptStatus <= iRegInterruptStatus or ImageEndIrq;
 
             -- Write registers
             if ChipSelect = '1' and Write = '1' then -- Write cycle
                 -- TODO: ignore when byteenable /= "0000"
                 case Address(1 downto 0) is
                     when "00" => iRegControl <= WriteData(1 DOWNTO 0);
-                    when "01" => iRegInterruptMask <= WriteData(1 DOWNTO 0);
-                    when "10" => iRegInterruptStatus <= iRegInterruptStatus and not WriteData(1 DOWNTO 0);
+                    when "01" => iRegInterruptMask <= WriteData(0);
+                    when "10" => iRegInterruptStatus <= iRegInterruptStatus and not WriteData(0);
                     when "11" => iRegImageAddress <= WriteData;
                     when others => null;
                 end case;
@@ -72,8 +71,8 @@ begin
             if ChipSelect = '1' and Read = '1' then
                 case Address(1 downto 0) is
                     when "00" => ReadData(1 downto 0) <= iRegControl;
-                    when "01" => ReadData(1 downto 0) <= iRegInterruptMask;
-                    when "10" => ReadData(1 downto 0) <= iRegInterruptStatus;
+                    when "01" => ReadData(0) <= iRegInterruptMask;
+                    when "10" => ReadData(0) <= iRegInterruptStatus;
                     when "11" => ReadData <= iRegImageAddress;
                     when others => null;
                 end case;
@@ -100,7 +99,7 @@ begin
             Irq <= '0';
         elsif rising_edge(Clk) then
             Irq <= '0';
-            if (iRegInterruptStatus and iRegInterruptMask) /= "00" then
+            if (iRegInterruptStatus and iRegInterruptMask) /= '0' then
                 Irq <= '1';
             end if;
         end if;

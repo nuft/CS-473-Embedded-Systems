@@ -21,7 +21,7 @@ architecture tb of camera_avalon_slave_tb is
               --CameraIfEnable: out std_logic;
               --MasterEnable  : out std_logic;
               Camera_nReset : out std_logic;
-              ImageStartIrq : in std_logic;
+              --ImageStartIrq : in std_logic;
               ImageEndIrq   : in std_logic);
     end component;
 
@@ -38,7 +38,7 @@ architecture tb of camera_avalon_slave_tb is
     --signal CameraIfEnable: std_logic;
     --signal MasterEnable  : std_logic;
     signal Camera_nReset : std_logic;
-    signal ImageStartIrq : std_logic;
+    --signal ImageStartIrq : std_logic;
     signal ImageEndIrq   : std_logic;
 
     constant clk_period : time := 20 ns; -- EDIT Put right period here
@@ -61,7 +61,7 @@ begin
               --CameraIfEnable=> CameraIfEnable,
               --MasterEnable  => MasterEnable,
               Camera_nReset => Camera_nReset,
-              ImageStartIrq => ImageStartIrq,
+              --ImageStartIrq => ImageStartIrq,
               ImageEndIrq   => ImageEndIrq);
 
     -- Clock generation
@@ -76,7 +76,7 @@ stimulus: process
 
     -- ISR bit mask
     constant END_IRQ: natural := 1;
-    constant START_IRQ: natural := 2;
+    --constant START_IRQ: natural := 2;
     -- CR bit mask
     constant PERIPH_EN: natural := 1;
     constant CAM_EN: natural := 2;
@@ -128,9 +128,9 @@ stimulus: process
         AvalonRead(REG_CR);
         assert unsigned(ReadData) = to_unsigned(3, 32)
         report "AvalonRead /= AvalonWrite" severity failure;
-        AvalonWrite(REG_IMR, to_unsigned(3, 32));
+        AvalonWrite(REG_IMR, to_unsigned(1, 32));
         AvalonRead(REG_IMR);
-        assert unsigned(ReadData) = to_unsigned(3, 32)
+        assert unsigned(ReadData) = to_unsigned(1, 32)
         report "AvalonRead /= AvalonWrite" severity failure;
         AvalonWrite(REG_IAR, to_unsigned(123456, 32));
         AvalonRead(REG_IAR);
@@ -140,20 +140,8 @@ stimulus: process
 
     procedure TEST_InterruptSetClear is
     begin
-        ImageEndIrq <= '0';
-        ImageStartIrq <= '1';
-        wait for clk_period;
-        ImageStartIrq <= '0';
-        AvalonRead(REG_ISR);
-        assert unsigned(ReadData) = to_unsigned(START_IRQ, 32)
-        report "START_IRQ not set" severity failure;
-        AvalonWrite(REG_ISR, to_unsigned(START_IRQ, 32));
-        AvalonRead(REG_ISR);
-        assert unsigned(ReadData) = to_unsigned(0, 32)
-        report "START_IRQ not cleared" severity failure;
-
         ImageEndIrq <= '1';
-        ImageStartIrq <= '0';
+        --ImageStartIrq <= '0';
         wait for clk_period;
         ImageEndIrq <= '0';
         AvalonRead(REG_ISR);
@@ -165,25 +153,25 @@ stimulus: process
         report "END_IRQ not cleared" severity failure;
 
         ImageEndIrq <= '1';
-        ImageStartIrq <= '1';
+        --ImageStartIrq <= '1';
         wait for clk_period;
         ImageEndIrq <= '0';
-        ImageStartIrq <= '0';
+        --ImageStartIrq <= '0';
         AvalonWrite(REG_ISR, to_unsigned(END_IRQ, 32));
         AvalonRead(REG_ISR);
-        assert unsigned(ReadData) = to_unsigned(START_IRQ, 32)
+        assert unsigned(ReadData) = to_unsigned(0, 32)
         report "END_IRQ not cleared" severity failure;
 
         -- check if writing 0 keeps intrrupt flags
         ImageEndIrq <= '1';
-        ImageStartIrq <= '1';
+        --ImageStartIrq <= '1';
         wait for clk_period;
         ImageEndIrq <= '0';
-        ImageStartIrq <= '0';
+        --ImageStartIrq <= '0';
         AvalonWrite(REG_ISR, to_unsigned(0, 32));
         AvalonRead(REG_ISR);
-        assert unsigned(ReadData) = to_unsigned(START_IRQ + END_IRQ, 32)
-        report "IRQ flags not set" severity failure;
+        assert unsigned(ReadData) = to_unsigned(END_IRQ, 32)
+        report "IRQ flag not set" severity failure;
 
     end procedure TEST_InterruptSetClear;
 
@@ -191,36 +179,20 @@ stimulus: process
     procedure TEST_InterruptMask is
     begin
         -- Test Interrupt mask
-        ImageStartIrq <= '0';
+        --ImageStartIrq <= '0';
         ImageEndIrq <= '1';
         AvalonWrite(REG_IMR, to_unsigned(0, 32));
         wait for clk_period;
         assert Irq = '0'
         report "IRQ ImageEndIrq not masked" severity failure;
 
-        ImageStartIrq <= '0';
+        --ImageStartIrq <= '0';
         ImageEndIrq <= '1';
-        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
+        AvalonWrite(REG_ISR, to_unsigned(END_IRQ, 32)); -- clear ISR
         AvalonWrite(REG_IMR, to_unsigned(END_IRQ, 32));
         wait for clk_period;
         assert Irq = '1'
         report "IRQ ImageEndIrq not activated" severity failure;
-
-        ImageStartIrq <= '1';
-        ImageEndIrq <= '0';
-        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
-        AvalonWrite(REG_IMR, to_unsigned(START_IRQ, 32));
-        wait for clk_period;
-        assert Irq = '1'
-        report "IRQ ImageStart not activated" severity failure;
-
-        ImageStartIrq <= '1';
-        ImageEndIrq <= '0';
-        AvalonWrite(REG_ISR, to_unsigned(END_IRQ + START_IRQ, 32)); -- clear ISR
-        AvalonWrite(REG_IMR, to_unsigned(0, 32));
-        wait for clk_period;
-        assert Irq = '0'
-        report "IRQ ImageStart not masked" severity failure;
     end procedure TEST_InterruptMask;
 
     -- Enable output signals test case
@@ -250,7 +222,7 @@ stimulus: process
         Read <= '0';
         Write <= '0';
         WriteData <= (others => '0');
-        ImageStartIrq <= '0';
+        --ImageStartIrq <= '0';
         ImageEndIrq <= '0';
 
         -- RESET generation
