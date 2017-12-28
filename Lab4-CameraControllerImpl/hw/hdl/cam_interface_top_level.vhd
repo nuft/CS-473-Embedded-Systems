@@ -150,12 +150,12 @@ begin
             last_fvalid := '0';
         elsif rising_edge(Clk) then
             -- falling edge of FValid
-            if (not FValid and last_fvalid) = '1' then
+            if (not GPIO_1_D5M_FVAL and last_fvalid) = '1' then
                 ImageEndIrq <= '1';
             else
                 ImageEndIrq <= '0';
             end if;
-            last_fvalid := FValid;
+            last_fvalid := GPIO_1_D5M_FVAL;
         end if;
     end process;
 
