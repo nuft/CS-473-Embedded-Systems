@@ -18,8 +18,8 @@ architecture tb of camera_avalon_slave_tb is
               WriteData     : in std_logic_vector (31 downto 0);
               Irq           : out std_logic;
               ImageAddress  : out std_logic_vector (31 downto 0);
-              CameraIfEnable: out std_logic;
-              MasterEnable  : out std_logic;
+              --CameraIfEnable: out std_logic;
+              --MasterEnable  : out std_logic;
               Camera_nReset : out std_logic;
               ImageStartIrq : in std_logic;
               ImageEndIrq   : in std_logic);
@@ -35,8 +35,8 @@ architecture tb of camera_avalon_slave_tb is
     signal WriteData     : std_logic_vector (31 downto 0);
     signal Irq           : std_logic;
     signal ImageAddress  : std_logic_vector (31 downto 0);
-    signal CameraIfEnable: std_logic;
-    signal MasterEnable  : std_logic;
+    --signal CameraIfEnable: std_logic;
+    --signal MasterEnable  : std_logic;
     signal Camera_nReset : std_logic;
     signal ImageStartIrq : std_logic;
     signal ImageEndIrq   : std_logic;
@@ -58,8 +58,8 @@ begin
               WriteData     => WriteData,
               Irq           => Irq,
               ImageAddress  => ImageAddress,
-              CameraIfEnable=> CameraIfEnable,
-              MasterEnable  => MasterEnable,
+              --CameraIfEnable=> CameraIfEnable,
+              --MasterEnable  => MasterEnable,
               Camera_nReset => Camera_nReset,
               ImageStartIrq => ImageStartIrq,
               ImageEndIrq   => ImageEndIrq);
@@ -228,15 +228,15 @@ stimulus: process
     begin
         AvalonWrite(REG_CR, to_unsigned(PERIPH_EN, 32));
         wait for clk_period;
-        assert CameraIfEnable = '1' and MasterEnable = '1'
-        report "Peripheral not enabled" severity failure;
+        --assert CameraIfEnable = '1' and MasterEnable = '1'
+        --report "Peripheral not enabled" severity failure;
         assert Camera_nReset = '0'
         report "Camera not disabled" severity failure;
 
         AvalonWrite(REG_CR, to_unsigned(CAM_EN, 32));
         wait for clk_period;
-        assert CameraIfEnable = '0' and MasterEnable = '0'
-        report "Peripheral not disabled" severity failure;
+        --assert CameraIfEnable = '0' and MasterEnable = '0'
+        --report "Peripheral not disabled" severity failure;
         assert Camera_nReset = '1'
         report "Camera not enabled" severity failure;
     end procedure TEST_EnableOut;

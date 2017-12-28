@@ -17,8 +17,7 @@ Port(
     -- output signals
     Irq             : OUT std_logic;
     ImageAddress    : OUT std_logic_vector (31 DOWNTO 0);
-    CameraIfEnable  : OUT std_logic;
-    MasterEnable    : OUT std_logic;
+    --CameraIfEnable  : OUT std_logic;
     Camera_nReset   : OUT std_logic;
 
     -- Input signals
@@ -86,11 +85,10 @@ begin
     pEnOut: process(Clk, nReset)
     begin
         if nReset = '0' then
-            CameraIfEnable <= '0';
-            MasterEnable <= '0';
+            --CameraIfEnable <= '0';
+            Camera_nReset <= '0';
         elsif rising_edge(Clk) then
-            CameraIfEnable <= iRegControl(0);
-            MasterEnable <= iRegControl(0);
+            --CameraIfEnable <= iRegControl(0);
             Camera_nReset <= iRegControl(1);
         end if;
     end process;
