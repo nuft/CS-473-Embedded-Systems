@@ -193,7 +193,6 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
             hps_0_io_hps_io_gpio_inst_GPIO54    : inout std_logic                     := 'X';
             hps_0_io_hps_io_gpio_inst_GPIO61    : inout std_logic                     := 'X';
             pio_leds_external_connection_export : out   std_logic_vector(7 downto 0);
-            reset_reset_n                            : in    std_logic                     := 'X';             -- reset_n
             i2c_0_i2c_scl                            : inout std_logic                     := 'X';             -- scl
             i2c_0_i2c_sda                            : inout std_logic                     := 'X';             -- sda
             cam_controller_0_conduit_end_d5m_d       : in    std_logic_vector(11 downto 0) := (others => 'X'); -- d5m_d
@@ -210,7 +209,6 @@ begin
     u0 : component soc_system
     port map(
         clk_clk                             => FPGA_CLK1_50,
-        reset_reset_n                       => '1',
         hps_0_ddr_mem_a                     => HPS_DDR3_ADDR,
         hps_0_ddr_mem_ba                    => HPS_DDR3_BA,
         hps_0_ddr_mem_ck                    => HPS_DDR3_CK_P,
