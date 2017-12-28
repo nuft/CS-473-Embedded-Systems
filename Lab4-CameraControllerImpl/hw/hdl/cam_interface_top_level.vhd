@@ -20,9 +20,9 @@ entity cam_component is
     -- Avalon Master
 	WaitreqMaster		 : IN std_logic;
 	AddressMaster		 : OUT std_logic_vector(31 DOWNTO 0);
-	BurstCountMaster	 : OUT std_logic_vector(15 DOWNTO 0);
+	BurstCountMaster	 : OUT std_logic_vector(3 DOWNTO 0);
 	WriteMaster	 		 : OUT std_logic;
-	ByteEnableMaster	 : OUT std_logic_vector(2 DOWNTO 0);
+	ByteEnableMaster	 : OUT std_logic_vector(3 DOWNTO 0);
 	WriteDataMaster	 	 : OUT std_logic_vector(31 DOWNTO 0);
 	
 	-- Camera	
