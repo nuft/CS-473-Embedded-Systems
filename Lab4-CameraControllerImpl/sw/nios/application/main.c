@@ -33,14 +33,13 @@ bool dump_image(const void *addr)
     // PPM header
     fprintf(outf, "P3\n320 240\n255\n");
 
-    const uint16_t *image = (uint16_t *)addr;
     for (unsigned lin = 0; lin < 240; lin++) {
         for (unsigned col = 0; col < 320; col++) {
-            uint16_t pixel = image[320 * lin + col];
-            fprintf(outf, "%hhu %hhu %hhu  ",
-                    (uint8_t)((pixel >> 11) & 0b11111),
-                    (uint8_t)((pixel >> 5) & 0b111111),
-                    (uint8_t)(pixel & 0b11111));
+            uint16_t pixel = IORD_16DIRECT((uintptr_t)addr + 320 * lin + col, 0);
+            uint8_t r = (uint8_t)((pixel >> 11) & 0b11111)<<3;
+            uint8_t g = (uint8_t)((pixel >> 5) & 0b111111)<<2;
+            uint8_t b = (uint8_t)(pixel & 0b11111)<<3;
+            fprintf(outf, "%hhu %hhu %hhu  ", r, g, b);
         }
         fprintf(outf, "\n");
     }
