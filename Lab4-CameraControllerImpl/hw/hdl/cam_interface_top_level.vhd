@@ -20,9 +20,9 @@ entity cam_component is
     -- Avalon Master
 	WaitreqMaster		 : IN std_logic;
 	AddressMaster		 : OUT std_logic_vector(31 DOWNTO 0);
-	BurstCountMaster	 : OUT std_logic_vector(15 DOWNTO 0);
+	BurstCountMaster	 : OUT std_logic_vector(3 DOWNTO 0);
 	WriteMaster	 		 : OUT std_logic;
-	ByteEnableMaster	 : OUT std_logic_vector(2 DOWNTO 0);
+	ByteEnableMaster	 : OUT std_logic_vector(3 DOWNTO 0);
 	WriteDataMaster	 	 : OUT std_logic_vector(31 DOWNTO 0);
 	
 	-- Camera	
@@ -60,6 +60,8 @@ architecture top_level of cam_component is
      --master to slave
      signal MasterIdle		: std_logic;
 	
+     -- to slave
+     signal ImageEndIrq     : std_logic;
 begin
 	SLAVE: entity work.camera_avalon_slave
 		port map (
@@ -141,5 +143,21 @@ begin
 				--locked => locked
 		);
 		
+    pEndIrq: process(Clk, nReset)
+    variable last_fvalid: std_logic;
+    begin
+        if nReset = '0' then
+            last_fvalid := '0';
+        elsif rising_edge(Clk) then
+            -- falling edge of FValid
+            if (not GPIO_1_D5M_FVAL and last_fvalid) = '1' then
+                ImageEndIrq <= '1';
+            else
+                ImageEndIrq <= '0';
+            end if;
+            last_fvalid := GPIO_1_D5M_FVAL;
+        end if;
+    end process;
+
 end architecture top_level;
 	

@@ -21,9 +21,9 @@ entity master is
 		
 		av_waitreq: in std_logic;
 		av_address: out std_logic_vector(31 downto 0);
-		av_burst_count: out std_logic_vector(15 downto 0);
+		av_burst_count: out std_logic_vector(3 downto 0);
 		av_write: out std_logic;
-		av_byte_enable: out std_logic_vector(2 downto 0);
+		av_byte_enable: out std_logic_vector(3 downto 0);
 		av_write_data: out std_logic_vector(31 downto 0);
 		av_nreset: in std_logic;
 		
@@ -147,10 +147,8 @@ begin
 					  av_burst_count <= std_logic_vector(to_unsigned(BURST_CNT_MAX, av_burst_count'length));
 					  av_write <= '1';
 					  if burst_reg < 8 then
-					  	av_byte_enable <= std_logic_vector(burst_reg(2 downto 0));
-					  end if;
-					  if burst_reg < 8 then
-					 	 av_write_data <= data_out_reg(to_integer(burst_reg));
+					  	av_byte_enable <= (others => '1');
+					 	av_write_data <= data_out_reg(to_integer(burst_reg));
 					  end if;
 					  burst_next <= burst_cnt;
 		end case;
