@@ -46,6 +46,22 @@
          type = "String";
       }
    }
+   element cam_controller_0.interrupt_sender
+   {
+      datum _tags
+      {
+         value = "";
+         type = "String";
+      }
+   }
+   element cam_controller_0.reset_sink
+   {
+      datum _tags
+      {
+         value = "";
+         type = "String";
+      }
+   }
    element clk_0
    {
       datum _sortIndex
@@ -69,6 +85,11 @@
          value = "1";
          type = "boolean";
       }
+      datum _tags
+      {
+         value = "";
+         type = "String";
+      }
       datum baseAddress
       {
          value = "0";
@@ -88,6 +109,14 @@
       datum baseAddress
       {
          value = "268437512";
+         type = "String";
+      }
+   }
+   element i2c_0.i2c
+   {
+      datum _tags
+      {
+         value = "";
          type = "String";
       }
    }
