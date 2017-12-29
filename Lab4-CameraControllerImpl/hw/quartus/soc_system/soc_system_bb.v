@@ -1,5 +1,10 @@
 
 module soc_system (
+	cam_controller_d5m_d,
+	cam_controller_d5m_fval,
+	cam_controller_d5m_lval,
+	cam_controller_d5m_pixclk,
+	cam_controller_d5m_reset_n,
 	clk_clk,
 	hps_0_ddr_mem_a,
 	hps_0_ddr_mem_ba,
@@ -65,17 +70,17 @@ module soc_system (
 	hps_0_io_hps_io_gpio_inst_GPIO53,
 	hps_0_io_hps_io_gpio_inst_GPIO54,
 	hps_0_io_hps_io_gpio_inst_GPIO61,
-	pio_leds_external_connection_export,
-	reset_reset_n,
 	i2c_0_i2c_scl,
 	i2c_0_i2c_sda,
-	cam_controller_0_conduit_end_d5m_d,
-	cam_controller_0_conduit_end_d5m_fval,
-	cam_controller_0_conduit_end_d5m_lval,
-	cam_controller_0_conduit_end_d5m_pixclk,
-	cam_controller_0_conduit_end_d5m_reset_n,
-	cam_controller_0_conduit_end_d5m_xclkin);	
+	pio_leds_external_connection_export,
+	pll_0_outclk0_clk,
+	reset_reset_n);	
 
+	input	[11:0]	cam_controller_d5m_d;
+	input		cam_controller_d5m_fval;
+	input		cam_controller_d5m_lval;
+	input		cam_controller_d5m_pixclk;
+	output		cam_controller_d5m_reset_n;
 	input		clk_clk;
 	output	[14:0]	hps_0_ddr_mem_a;
 	output	[2:0]	hps_0_ddr_mem_ba;
@@ -141,14 +146,9 @@ module soc_system (
 	inout		hps_0_io_hps_io_gpio_inst_GPIO53;
 	inout		hps_0_io_hps_io_gpio_inst_GPIO54;
 	inout		hps_0_io_hps_io_gpio_inst_GPIO61;
-	output	[7:0]	pio_leds_external_connection_export;
-	input		reset_reset_n;
 	inout		i2c_0_i2c_scl;
 	inout		i2c_0_i2c_sda;
-	input	[11:0]	cam_controller_0_conduit_end_d5m_d;
-	input		cam_controller_0_conduit_end_d5m_fval;
-	input		cam_controller_0_conduit_end_d5m_lval;
-	input		cam_controller_0_conduit_end_d5m_pixclk;
-	output		cam_controller_0_conduit_end_d5m_reset_n;
-	output		cam_controller_0_conduit_end_d5m_xclkin;
+	output	[7:0]	pio_leds_external_connection_export;
+	output		pll_0_outclk0_clk;
+	input		reset_reset_n;
 endmodule

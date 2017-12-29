@@ -195,12 +195,12 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
             pio_leds_external_connection_export : out   std_logic_vector(7 downto 0);
             i2c_0_i2c_scl                            : inout std_logic                     := 'X';             -- scl
             i2c_0_i2c_sda                            : inout std_logic                     := 'X';             -- sda
-            cam_controller_0_conduit_end_d5m_d       : in    std_logic_vector(11 downto 0) := (others => 'X'); -- d5m_d
-            cam_controller_0_conduit_end_d5m_fval    : in    std_logic                     := 'X';             -- d5m_fval
-            cam_controller_0_conduit_end_d5m_lval    : in    std_logic                     := 'X';             -- d5m_lval
-            cam_controller_0_conduit_end_d5m_pixclk  : in    std_logic                     := 'X';             -- d5m_pixclk
-            cam_controller_0_conduit_end_d5m_reset_n : out   std_logic;                                        -- d5m_reset_n
-            cam_controller_0_conduit_end_d5m_xclkin  : out   std_logic                                         -- d5m_xclkin
+            cam_controller_d5m_d                : in    std_logic_vector(11 downto 0) := (others => 'X'); -- d5m_d
+            cam_controller_d5m_fval             : in    std_logic                     := 'X';             -- d5m_fval
+            cam_controller_d5m_lval             : in    std_logic                     := 'X';             -- d5m_lval
+            cam_controller_d5m_pixclk           : in    std_logic                     := 'X';             -- d5m_pixclk
+            cam_controller_d5m_reset_n          : out   std_logic;                                        -- d5m_reset_n
+            pll_0_outclk0_clk                   : out   std_logic                                         -- clk
         );
     end component soc_system;
 
@@ -274,15 +274,15 @@ begin
         hps_0_io_hps_io_gpio_inst_GPIO54    => HPS_KEY_N,
         hps_0_io_hps_io_gpio_inst_GPIO61    => HPS_GSENSOR_INT,
         pio_leds_external_connection_export => LED,
-        reset_reset_n                            => KEY_N(0),                            --                        reset.reset_n
-        i2c_0_i2c_scl                            => GPIO_1_D5M_SCLK,                            --                    i2c_0_i2c.scl
-        i2c_0_i2c_sda                            => GPIO_1_D5M_SDATA,                            --                             .sda
-        cam_controller_0_conduit_end_d5m_d       => GPIO_1_D5M_D,       -- cam_controller_0_conduit_end.d5m_d
-        cam_controller_0_conduit_end_d5m_fval    => GPIO_1_D5M_FVAL,    --                             .d5m_fval
-        cam_controller_0_conduit_end_d5m_lval    => GPIO_1_D5M_LVAL,    --                             .d5m_lval
-        cam_controller_0_conduit_end_d5m_pixclk  => GPIO_1_D5M_PIXCLK,  --                             .d5m_pixclk
-        cam_controller_0_conduit_end_d5m_reset_n => GPIO_1_D5M_RESET_N, --                             .d5m_reset_n
-        cam_controller_0_conduit_end_d5m_xclkin  => GPIO_1_D5M_XCLKIN   --                             .d5m_xclkin
+        reset_reset_n                       => KEY_N(0),                            --                        reset.reset_n
+        i2c_0_i2c_scl                       => GPIO_1_D5M_SCLK,                            --                    i2c_0_i2c.scl
+        i2c_0_i2c_sda                       => GPIO_1_D5M_SDATA,                            --                             .sda
+        cam_controller_d5m_d                => GPIO_1_D5M_D,                --               cam_controller.d5m_d
+        cam_controller_d5m_fval             => GPIO_1_D5M_FVAL,             --                             .d5m_fval
+        cam_controller_d5m_lval             => GPIO_1_D5M_LVAL,             --                             .d5m_lval
+        cam_controller_d5m_pixclk           => GPIO_1_D5M_PIXCLK,           --                             .d5m_pixclk
+        cam_controller_d5m_reset_n          => GPIO_1_D5M_RESET_N,          --                             .d5m_reset_n
+        pll_0_outclk0_clk                   => GPIO_1_D5M_XCLKIN                    --                pll_0_outclk0.clk
     );
 
 end;

@@ -30,8 +30,7 @@ entity cam_component is
     GPIO_1_D5M_FVAL    : IN    std_logic;
     GPIO_1_D5M_LVAL    : IN    std_logic;
     GPIO_1_D5M_PIXCLK  : IN    std_logic;
-    GPIO_1_D5M_RESET_N : OUT   std_logic;
- 	GPIO_1_D5M_XCLKIN  : OUT   std_logic
+    GPIO_1_D5M_RESET_N : OUT   std_logic
 	);
 end entity cam_component;
 	
@@ -133,14 +132,6 @@ begin
 			q       => PixFIFOdataOut,
 			rdempty => PixFIFOempty,
 			wrfull  => PixFIFOfull
-		);
-	PLL: entity work.pll
-		
-			port map (
-				refclk => Clk,
-				rst => nReset,
-				outclk_0 => GPIO_1_D5M_XCLKIN
-				--locked => locked
 		);
 		
     pEndIrq: process(Clk, nReset)
