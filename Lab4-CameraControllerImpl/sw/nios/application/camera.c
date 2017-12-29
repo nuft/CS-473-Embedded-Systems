@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <system.h>
+#include <sys/alt_irq.h>
+#include <io.h>
 #include "i2c/i2c.h"
 
 /* Settings */
@@ -12,11 +15,11 @@
 #define CONFIG_PIXCLK_DIV      0 // 0,1,2,4,8,16,32,64 half of effective divider
 
 /* Camera Controller peripheral defines */
-// #define CAM_BASE 0x00 // TODO
-#define CAM_CR  0x00
-#define CAM_IMR 0x01
-#define CAM_ISR 0x02
-#define CAM_IAR 0x03
+#define CAM_BASE CAM_CONTROLLER_0_BASE
+#define CAM_CR  (0x00*4)
+#define CAM_IMR (0x01*4)
+#define CAM_ISR (0x02*4)
+#define CAM_IAR (0x03*4)
 
 #define CAM_CR_CON_EN_MASK  0x00000001
 #define CAM_CR_CAM_EN_MASK  0x00000002
@@ -100,9 +103,14 @@ static bool write_reg(uint8_t register_offset, uint16_t data)
 
 static uint16_t read_reg(uint8_t register_offset)
 {
+    int success;
     uint8_t byte_data[2] = {0, 0};
 
-    i2c_read_array(_i2c, TRDB_D5M_I2C_ADDRESS, register_offset, byte_data, sizeof(byte_data));
+    success = i2c_read_array(_i2c, TRDB_D5M_I2C_ADDRESS, register_offset, byte_data, sizeof(byte_data));
+
+    if (success != I2C_SUCCESS) {
+    	printf("ERROR: I2C read\n");
+    }
 
     return ((uint16_t) byte_data[0] << 8) + byte_data[1];
 }
@@ -118,7 +126,11 @@ void camera_disable(void)
     IOWR_32DIRECT(CAM_BASE, CAM_CR, 0);
 }
 
+// #define CAM_IC_ID CAM_CONTROLLER_0_IRQ_INTERRUPT_CONTROLLER_ID
+// #define CAM_IRQ CAM_CONTROLLER_0_IRQ
 
+#define CAM_IC_ID 0
+#define CAM_IRQ 1
 /* Setup the camera
  * @note isr can be NULL to disable the interrupt
  */
@@ -131,15 +143,15 @@ void camera_setup(i2c_dev *i2c, void *buf, void (*isr)(void *), void *isr_arg)
     if (isr != NULL) {
         // ic_id = <MY_IP>_IRQ_INTERRUPT_CONTROLLER_ID
         // irq = <MY_IP>_IRQ
-        // alt_ic_isr_register(ic_id, irq, isr, isr_arg, NULL)
-        // alt_ic_irq_enable(ic_id, irq)
-
+    	alt_ic_isr_register(CAM_IC_ID, CAM_IRQ, isr, isr_arg, NULL);
+    	alt_ic_irq_enable(CAM_IC_ID, CAM_IRQ);
         // Enable interrupt
         IOWR_32DIRECT(CAM_BASE, CAM_IMR, CAM_IMR_IRQ_MASK);
     } else {
         // Disable interrupt
         IOWR_32DIRECT(CAM_BASE, CAM_IMR, 0);
     }
+    camera_set_frame_buffer(buf);
 
     // ROW_SIZE = 1919 (R0x03)
     write_reg(REG_ROW_SIZE, 1919);

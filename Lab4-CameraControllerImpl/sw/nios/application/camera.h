@@ -5,6 +5,7 @@
 
 #define IMAGE_HEIGHT    240
 #define IMAGE_WIDTH     320
+#define IMAGE_SIZE 		(2*IMAGE_HEIGHT*IMAGE_WIDTH)
 
 void camera_enable(void);
 void camera_disable(void);
