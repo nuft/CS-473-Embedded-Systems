@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="soc_system" kind="soc_system" version="1.0" fabric="QSYS">
  <!-- Format version 16.0 211 (Future versions may contain additional information.) -->
- <!-- 2017.12.29.18:04:46 -->
+ <!-- 2017.12.30.17:18:10 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1514567086</value>
+  <value>1514650690</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -2042,6 +2042,72 @@ parameters are a RESULT of the module parameters. -->
     <direction>Output</direction>
     <width>1</width>
     <role>d5m_reset_n</role>
+   </port>
+   <port>
+    <name>DEBUG_AddressUpdate</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_addressupdate</role>
+   </port>
+   <port>
+    <name>DEBUG_LineFIFOclear</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_linefifoclear</role>
+   </port>
+   <port>
+    <name>DEBUG_LineFIFOrreq</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_linefiforr</role>
+   </port>
+   <port>
+    <name>DEBUG_LineFIFOwreq</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_linefifowreq</role>
+   </port>
+   <port>
+    <name>DEBUG_PixFIFOfull</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_pixfifofull</role>
+   </port>
+   <port>
+    <name>DEBUG_PixFIFOrreq</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_pixfiforreq</role>
+   </port>
+   <port>
+    <name>DEBUG_PixelDatawreq</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_pixeldatawreq</role>
+   </port>
+   <port>
+    <name>DEBUG_BurstCountMaster</name>
+    <direction>Output</direction>
+    <width>4</width>
+    <role>debug_burstcountmaster</role>
+   </port>
+   <port>
+    <name>DEBUG_ByteEnableMaster</name>
+    <direction>Output</direction>
+    <width>4</width>
+    <role>debug_byteenablemaster</role>
+   </port>
+   <port>
+    <name>DEBUG_WaitreqMaster</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_waitreqmaster</role>
+   </port>
+   <port>
+    <name>DEBUG_WriteMaster</name>
+    <direction>Output</direction>
+    <width>1</width>
+    <role>debug_writemaster</role>
    </port>
   </interface>
  </module>

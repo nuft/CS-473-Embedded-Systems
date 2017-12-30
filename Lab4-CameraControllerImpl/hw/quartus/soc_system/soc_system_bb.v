@@ -5,6 +5,17 @@ module soc_system (
 	cam_controller_d5m_lval,
 	cam_controller_d5m_pixclk,
 	cam_controller_d5m_reset_n,
+	cam_controller_debug_addressupdate,
+	cam_controller_debug_linefifoclear,
+	cam_controller_debug_linefiforr,
+	cam_controller_debug_linefifowreq,
+	cam_controller_debug_pixfifofull,
+	cam_controller_debug_pixfiforreq,
+	cam_controller_debug_pixeldatawreq,
+	cam_controller_debug_burstcountmaster,
+	cam_controller_debug_byteenablemaster,
+	cam_controller_debug_waitreqmaster,
+	cam_controller_debug_writemaster,
 	clk_clk,
 	hps_0_ddr_mem_a,
 	hps_0_ddr_mem_ba,
@@ -81,6 +92,17 @@ module soc_system (
 	input		cam_controller_d5m_lval;
 	input		cam_controller_d5m_pixclk;
 	output		cam_controller_d5m_reset_n;
+	output		cam_controller_debug_addressupdate;
+	output		cam_controller_debug_linefifoclear;
+	output		cam_controller_debug_linefiforr;
+	output		cam_controller_debug_linefifowreq;
+	output		cam_controller_debug_pixfifofull;
+	output		cam_controller_debug_pixfiforreq;
+	output		cam_controller_debug_pixeldatawreq;
+	output	[3:0]	cam_controller_debug_burstcountmaster;
+	output	[3:0]	cam_controller_debug_byteenablemaster;
+	output		cam_controller_debug_waitreqmaster;
+	output		cam_controller_debug_writemaster;
 	input		clk_clk;
 	output	[14:0]	hps_0_ddr_mem_a;
 	output	[2:0]	hps_0_ddr_mem_ba;

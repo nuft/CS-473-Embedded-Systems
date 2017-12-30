@@ -30,7 +30,23 @@ entity cam_component is
     GPIO_1_D5M_FVAL    : IN    std_logic;
     GPIO_1_D5M_LVAL    : IN    std_logic;
     GPIO_1_D5M_PIXCLK  : IN    std_logic;
-    GPIO_1_D5M_RESET_N : OUT   std_logic
+    GPIO_1_D5M_RESET_N : OUT   std_logic;
+
+    -- Debug signals
+   	DEBUG_LineFIFOrreq 	 : OUT std_logic;
+	DEBUG_LineFIFOwreq 	 : OUT std_logic;
+	DEBUG_LineFIFOclear    : OUT std_logic;
+
+	DEBUG_PixelDatawreq    : OUT std_logic;
+    DEBUG_PixFIFOfull		 : OUT std_logic;
+    DEBUG_PixFIFOrreq      : OUT std_logic;
+
+	DEBUG_AddressUpdate   : OUT  std_logic;
+
+	DEBUG_WaitreqMaster		: OUT std_logic;
+	DEBUG_BurstCountMaster	: OUT std_logic_vector(3 DOWNTO 0);
+	DEBUG_WriteMaster	 	: OUT std_logic;
+	DEBUG_ByteEnableMaster	 : OUT std_logic_vector(3 DOWNTO 0)
 	);
 end entity cam_component;
 	
@@ -61,7 +77,31 @@ architecture top_level of cam_component is
 	
      -- to slave
      signal ImageEndIrq     : std_logic;
+
+     -- Avalon Master
+	signal iBurstCountMaster	 : std_logic_vector(3 DOWNTO 0);
+	signal iWriteMaster	 		 : std_logic;
+	signal iByteEnableMaster	 : std_logic_vector(3 DOWNTO 0);
 begin
+	DEBUG_LineFIFOrreq <= LineFIFOrreq;
+	DEBUG_LineFIFOwreq <= LineFIFOwreq;
+	DEBUG_LineFIFOclear <= LineFIFOclear;
+
+	DEBUG_PixelDatawreq <= PixelDatawreq;
+	DEBUG_PixFIFOfull <= PixFIFOfull;
+	DEBUG_PixFIFOrreq <= PixFIFOrreq;
+	
+	DEBUG_AddressUpdate <= AddressUpdate;
+	
+	DEBUG_WaitreqMaster <= WaitreqMaster;
+	DEBUG_BurstCountMaster <= iBurstCountMaster;
+	DEBUG_WriteMaster <= iWriteMaster;
+	DEBUG_ByteEnableMaster <= iByteEnableMaster;
+
+	BurstCountMaster <= iBurstCountMaster;
+	WriteMaster <= iWriteMaster;
+	ByteEnableMaster <= iByteEnableMaster;
+
 	SLAVE: entity work.camera_avalon_slave
 		port map (
 			Clk => Clk,
@@ -89,9 +129,9 @@ begin
 			fifo_data_out => PixFIFOdataOut,
 			av_waitreq => WaitreqMaster,
 			av_address => AddressMaster,
-			av_burst_count => BurstCountMaster,
-			av_write => WriteMaster,
-			av_byte_enable => ByteEnableMaster,
+			av_burst_count => iBurstCountMaster,
+			av_write => iWriteMaster,
+			av_byte_enable => iByteEnableMaster,
 			av_write_data => WriteDataMaster,
 			av_nreset => nReset,
 			sv_image_address => ImageAddress,
