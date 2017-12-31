@@ -19,6 +19,8 @@ module soc_system (
 	cam_controller_debug_pixfifordusedw,
 	cam_controller_debug_pixfifowreq,
 	cam_controller_debug_writedatamaster,
+	cam_controller_debug_linefifodata,
+	cam_controller_debug_pixfifodata,
 	clk_clk,
 	hps_0_ddr_mem_a,
 	hps_0_ddr_mem_ba,
@@ -109,6 +111,8 @@ module soc_system (
 	output	[4:0]	cam_controller_debug_pixfifordusedw;
 	output		cam_controller_debug_pixfifowreq;
 	output	[31:0]	cam_controller_debug_writedatamaster;
+	output	[4:0]	cam_controller_debug_linefifodata;
+	output	[15:0]	cam_controller_debug_pixfifodata;
 	input		clk_clk;
 	output	[14:0]	hps_0_ddr_mem_a;
 	output	[2:0]	hps_0_ddr_mem_ba;

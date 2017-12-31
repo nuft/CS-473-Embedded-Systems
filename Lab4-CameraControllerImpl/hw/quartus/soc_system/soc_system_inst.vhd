@@ -19,6 +19,8 @@
 			cam_controller_debug_pixfifordusedw   : out   std_logic_vector(4 downto 0);                     -- debug_pixfifordusedw
 			cam_controller_debug_pixfifowreq      : out   std_logic;                                        -- debug_pixfifowreq
 			cam_controller_debug_writedatamaster  : out   std_logic_vector(31 downto 0);                    -- debug_writedatamaster
+			cam_controller_debug_linefifodata     : out   std_logic_vector(4 downto 0);                     -- debug_linefifodata
+			cam_controller_debug_pixfifodata      : out   std_logic_vector(15 downto 0);                    -- debug_pixfifodata
 			clk_clk                               : in    std_logic                     := 'X';             -- clk
 			hps_0_ddr_mem_a                       : out   std_logic_vector(14 downto 0);                    -- mem_a
 			hps_0_ddr_mem_ba                      : out   std_logic_vector(2 downto 0);                     -- mem_ba
@@ -113,6 +115,8 @@
 			cam_controller_debug_pixfifordusedw   => CONNECTED_TO_cam_controller_debug_pixfifordusedw,   --                             .debug_pixfifordusedw
 			cam_controller_debug_pixfifowreq      => CONNECTED_TO_cam_controller_debug_pixfifowreq,      --                             .debug_pixfifowreq
 			cam_controller_debug_writedatamaster  => CONNECTED_TO_cam_controller_debug_writedatamaster,  --                             .debug_writedatamaster
+			cam_controller_debug_linefifodata     => CONNECTED_TO_cam_controller_debug_linefifodata,     --                             .debug_linefifodata
+			cam_controller_debug_pixfifodata      => CONNECTED_TO_cam_controller_debug_pixfifodata,      --                             .debug_pixfifodata
 			clk_clk                               => CONNECTED_TO_clk_clk,                               --                          clk.clk
 			hps_0_ddr_mem_a                       => CONNECTED_TO_hps_0_ddr_mem_a,                       --                    hps_0_ddr.mem_a
 			hps_0_ddr_mem_ba                      => CONNECTED_TO_hps_0_ddr_mem_ba,                      --                             .mem_ba

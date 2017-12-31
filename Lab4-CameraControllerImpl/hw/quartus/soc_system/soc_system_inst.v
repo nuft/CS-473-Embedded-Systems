@@ -18,6 +18,8 @@
 		.cam_controller_debug_pixfifordusedw   (<connected-to-cam_controller_debug_pixfifordusedw>),   //                             .debug_pixfifordusedw
 		.cam_controller_debug_pixfifowreq      (<connected-to-cam_controller_debug_pixfifowreq>),      //                             .debug_pixfifowreq
 		.cam_controller_debug_writedatamaster  (<connected-to-cam_controller_debug_writedatamaster>),  //                             .debug_writedatamaster
+		.cam_controller_debug_linefifodata     (<connected-to-cam_controller_debug_linefifodata>),     //                             .debug_linefifodata
+		.cam_controller_debug_pixfifodata      (<connected-to-cam_controller_debug_pixfifodata>),      //                             .debug_pixfifodata
 		.clk_clk                               (<connected-to-clk_clk>),                               //                          clk.clk
 		.hps_0_ddr_mem_a                       (<connected-to-hps_0_ddr_mem_a>),                       //                    hps_0_ddr.mem_a
 		.hps_0_ddr_mem_ba                      (<connected-to-hps_0_ddr_mem_ba>),                      //                             .mem_ba
