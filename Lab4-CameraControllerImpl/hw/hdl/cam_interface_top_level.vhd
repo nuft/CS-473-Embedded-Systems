@@ -33,20 +33,22 @@ entity cam_component is
     GPIO_1_D5M_RESET_N : OUT   std_logic;
 
     -- Debug signals
-   	DEBUG_LineFIFOrreq 	 : OUT std_logic;
-	DEBUG_LineFIFOwreq 	 : OUT std_logic;
-	DEBUG_LineFIFOclear    : OUT std_logic;
+   	DEBUG_LineFIFOrreq		: OUT std_logic;
+	DEBUG_LineFIFOwreq		: OUT std_logic;
+	DEBUG_LineFIFOclear		: OUT std_logic;
 
-	DEBUG_PixelDatawreq    : OUT std_logic;
-    DEBUG_PixFIFOfull		 : OUT std_logic;
-    DEBUG_PixFIFOrreq      : OUT std_logic;
+	DEBUG_PixelDatawreq		: OUT std_logic;
+    DEBUG_PixFIFOfull		: OUT std_logic;
+    DEBUG_PixFIFOrreq		: OUT std_logic;
 
-	DEBUG_AddressUpdate   : OUT  std_logic;
+	DEBUG_AddressUpdate		: OUT  std_logic;
 
 	DEBUG_WaitreqMaster		: OUT std_logic;
+	DEBUG_AddressMaster		: OUT std_logic_vector(31 DOWNTO 0);
 	DEBUG_BurstCountMaster	: OUT std_logic_vector(3 DOWNTO 0);
-	DEBUG_WriteMaster	 	: OUT std_logic;
-	DEBUG_ByteEnableMaster	 : OUT std_logic_vector(3 DOWNTO 0)
+	DEBUG_WriteMaster		: OUT std_logic;
+	DEBUG_ByteEnableMaster	: OUT std_logic_vector(3 DOWNTO 0);
+	DEBUG_WriteDataMaster	: OUT std_logic_vector(31 DOWNTO 0)
 	);
 end entity cam_component;
 	
@@ -79,9 +81,11 @@ architecture top_level of cam_component is
      signal ImageEndIrq     : std_logic;
 
      -- Avalon Master
-	signal iBurstCountMaster	 : std_logic_vector(3 DOWNTO 0);
-	signal iWriteMaster	 		 : std_logic;
-	signal iByteEnableMaster	 : std_logic_vector(3 DOWNTO 0);
+    signal iAddressMaster		: std_logic_vector(31 DOWNTO 0);
+	signal iBurstCountMaster	: std_logic_vector(3 DOWNTO 0);
+	signal iWriteMaster	 		: std_logic;
+	signal iByteEnableMaster	: std_logic_vector(3 DOWNTO 0);
+	signal iWriteDataMaster		: std_logic_vector(31 DOWNTO 0);
 begin
 	DEBUG_LineFIFOrreq <= LineFIFOrreq;
 	DEBUG_LineFIFOwreq <= LineFIFOwreq;
@@ -94,9 +98,11 @@ begin
 	DEBUG_AddressUpdate <= AddressUpdate;
 	
 	DEBUG_WaitreqMaster <= WaitreqMaster;
+	DEBUG_AddressMaster <= iAddressMaster;
 	DEBUG_BurstCountMaster <= iBurstCountMaster;
 	DEBUG_WriteMaster <= iWriteMaster;
 	DEBUG_ByteEnableMaster <= iByteEnableMaster;
+	DEBUG_WriteDataMaster <= iWriteDataMaster;
 
 	BurstCountMaster <= iBurstCountMaster;
 	WriteMaster <= iWriteMaster;
@@ -128,11 +134,11 @@ begin
 			fifo_full => PixFIFOfull,
 			fifo_data_out => PixFIFOdataOut,
 			av_waitreq => WaitreqMaster,
-			av_address => AddressMaster,
+			av_address => iAddressMaster,
 			av_burst_count => iBurstCountMaster,
 			av_write => iWriteMaster,
 			av_byte_enable => iByteEnableMaster,
-			av_write_data => WriteDataMaster,
+			av_write_data => iWriteDataMaster,
 			av_nreset => nReset,
 			sv_image_address => ImageAddress,
 			sv_address_update => AddressUpdate,
