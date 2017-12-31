@@ -19,8 +19,9 @@ Port(
     LineFIFOclear   : OUT std_logic;
 
     -- output signals
-    PixelDatawreq   : OUT std_logic;
-    PixelData       : OUT std_logic_vector (15 DOWNTO 0);
+    PixFIFOwreq     : OUT std_logic;
+    PixFIFOData     : OUT std_logic_vector (15 DOWNTO 0);
+    PixFIFOaclr     : OUT std_logic;
     AddressUpdate   : OUT std_logic
 );
 End camera_interface;
@@ -62,7 +63,7 @@ begin
             BayerState <= IDLE;
             LineFIFOrreq <= '0';
 
-            PixelData <= (others => '0');
+            PixFIFOData <= (others => '0');
             PixelState <= IDLE;
 
             BlueCache <= (others => '0');
@@ -83,12 +84,12 @@ begin
                     GreenCache <= LineFIFOData;
                     BayerState <= RED;
                 when RED =>
-                    PixelData(15 DOWNTO 11) <= LineFIFOData;
-                    PixelData(4 DOWNTO 0) <= BlueCache;
-                    PixelData(10 DOWNTO 5) <= std_logic_vector(
-                                                unsigned('0' & GreenCache)
-                                              + unsigned(CamDataBuf)
-                                            );
+                    PixFIFOData(15 DOWNTO 11) <= LineFIFOData;
+                    PixFIFOData(4 DOWNTO 0) <= BlueCache;
+                    PixFIFOData(10 DOWNTO 5) <= std_logic_vector(
+                                                    unsigned('0' & GreenCache)
+                                                  + unsigned(CamDataBuf)
+                                                );
                     if BayerActive = '0' then
                         BayerState <= IDLE;
                         LineFIFOrreq <= '0';
@@ -97,7 +98,7 @@ begin
                     end if;
             end case;
 
-            PixelDatawreq <= '0'; -- default
+            PixFIFOwreq <= '0'; -- default
             case PixelState is
                 when IDLE =>
                     if BayerActive = '0' then
@@ -108,7 +109,7 @@ begin
                 when PPROCESS =>
                     PixelState <= POUTPUT;
                 when POUTPUT =>
-                    PixelDatawreq <= '1';
+                    PixFIFOwreq <= '1';
                     PixelState <= PSKIP;
                 when PSKIP =>
                     PixelState <= IDLE;
@@ -159,11 +160,14 @@ begin
         if nReset = '0' or FValid = '0' then
             last_fvalid := '0';
             AddressUpdate <= '0';
+            PixFIFOaclr <= '0';
         elsif rising_edge(Clk) then
             -- rising edge of FValid
             if (FValid and not last_fvalid) = '1' then
-                AddressUpdate <= '1';
+                PixFIFOaclr <= '1'; -- clear PixFIFO
+                AddressUpdate <= '1'; -- update image destination address
             else
+                PixFIFOaclr <= '0';
                 AddressUpdate <= '0';
             end if;
             last_fvalid := FValid;

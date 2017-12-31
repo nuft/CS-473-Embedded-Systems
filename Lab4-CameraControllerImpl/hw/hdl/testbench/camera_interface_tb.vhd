@@ -16,10 +16,11 @@ architecture tb of camera_interface_tb is
               FValid        : in std_logic;
               LineFIFOrreq  : out std_logic;
               LineFIFOwreq  : out std_logic;
-              LineFIFOclear  : out std_logic;
+              LineFIFOclear : out std_logic;
               LineFIFOData  : in std_logic_vector (4 DOWNTO 0);
-              PixelDatawreq : out std_logic;
-              PixelData     : out std_logic_vector (15 downto 0);
+              PixFIFOwreq   : out std_logic;
+              PixFIFOData   : out std_logic_vector (15 downto 0);
+              PixFIFOaclr   : out std_logic;
               AddressUpdate : out std_logic);
     end component;
 
@@ -30,10 +31,11 @@ architecture tb of camera_interface_tb is
     signal FValid        : std_logic;
     signal LineFIFOrreq  : std_logic;
     signal LineFIFOwreq  : std_logic;
-    signal LineFIFOclear  : std_logic;
+    signal LineFIFOclear : std_logic;
     signal LineFIFOData  : std_logic_vector (4 DOWNTO 0);
-    signal PixelDatawreq : std_logic;
-    signal PixelData     : std_logic_vector (15 downto 0);
+    signal PixFIFOwreq   : std_logic;
+    signal PixFIFOData   : std_logic_vector (15 downto 0);
+    signal PixFIFOaclr   : std_logic;
     signal AddressUpdate : std_logic;
 
     constant clk_period : time := 20 ns;
@@ -52,8 +54,9 @@ begin
               LineFIFOwreq  => LineFIFOwreq,
               LineFIFOclear => LineFIFOclear,
               LineFIFOData  => LineFIFOData,
-              PixelDatawreq => PixelDatawreq,
-              PixelData     => PixelData,
+              PixFIFOwreq   => PixFIFOwreq,
+              PixFIFOData   => PixFIFOData,
+              PixFIFOaclr   => PixFIFOaclr,
               AddressUpdate => AddressUpdate);
 
     -- Clock generation
@@ -238,9 +241,9 @@ begin
         LineFIFOData <= "11100"; -- red
         wait for clk_period;
 
-        assert unsigned(PixelData) = B"11100_100000_10101"
+        assert unsigned(PixFIFOData) = B"11100_100000_10101"
         report "ASSERT FAILED"  & LF &
-               "PixelData = " & to_bstring(PixelData) & LF &
+               "PixFIFOData = " & to_bstring(PixFIFOData) & LF &
                "Expected:   " & B"11100_100000_10101"
                severity failure;
 
