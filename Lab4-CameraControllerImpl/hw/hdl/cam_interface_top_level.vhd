@@ -38,9 +38,9 @@ entity cam_component is
 	DEBUG_LineFIFOclear		: OUT std_logic;
 
 	DEBUG_PixFIFOwreq		: OUT std_logic;
-    DEBUG_PixFIFOfull		: OUT std_logic;
 	DEBUG_PixFIFOaclr		: OUT std_logic;
     DEBUG_PixFIFOrreq		: OUT std_logic;
+    DEBUG_PixFIFOrdusedw	: OUT std_logic_vector(4 DOWNTO 0);
 
 	DEBUG_AddressUpdate		: OUT  std_logic;
 
@@ -92,9 +92,9 @@ begin
 	DEBUG_LineFIFOclear <= LineFIFOclear;
 
 	DEBUG_PixFIFOwreq <= PixFIFOwreq;
-	DEBUG_PixFIFOfull <= PixFIFOfull;
 	DEBUG_PixFIFOaclr <= PixFIFOaclr;
 	DEBUG_PixFIFOrreq <= PixFIFOrreq;
+	DEBUG_PixFIFOrdusedw <= PixFIFOrdusedw;
 	
 	DEBUG_AddressUpdate <= AddressUpdate;
 	
