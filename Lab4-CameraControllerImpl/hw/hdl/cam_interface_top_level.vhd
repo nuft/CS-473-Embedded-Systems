@@ -62,6 +62,7 @@ architecture top_level of cam_component is
 	 signal LineFIFOclear    : std_logic;
 	 
 	 --pixfifo
+	 signal PixFIFOaclr      : std_logic;
 	 signal PixFIFOwreq      : std_logic;
      signal PixFIFOData      : std_logic_vector (15 DOWNTO 0);
      signal PixFIFOdataOut   : std_logic_vector (15 DOWNTO 0);
