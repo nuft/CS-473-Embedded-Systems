@@ -8,13 +8,18 @@
 		.cam_controller_debug_linefifoclear    (<connected-to-cam_controller_debug_linefifoclear>),    //                             .debug_linefifoclear
 		.cam_controller_debug_linefiforr       (<connected-to-cam_controller_debug_linefiforr>),       //                             .debug_linefiforr
 		.cam_controller_debug_linefifowreq     (<connected-to-cam_controller_debug_linefifowreq>),     //                             .debug_linefifowreq
-		.cam_controller_debug_pixfifofull      (<connected-to-cam_controller_debug_pixfifofull>),      //                             .debug_pixfifofull
 		.cam_controller_debug_pixfiforreq      (<connected-to-cam_controller_debug_pixfiforreq>),      //                             .debug_pixfiforreq
-		.cam_controller_debug_pixeldatawreq    (<connected-to-cam_controller_debug_pixeldatawreq>),    //                             .debug_pixeldatawreq
 		.cam_controller_debug_burstcountmaster (<connected-to-cam_controller_debug_burstcountmaster>), //                             .debug_burstcountmaster
 		.cam_controller_debug_byteenablemaster (<connected-to-cam_controller_debug_byteenablemaster>), //                             .debug_byteenablemaster
 		.cam_controller_debug_waitreqmaster    (<connected-to-cam_controller_debug_waitreqmaster>),    //                             .debug_waitreqmaster
 		.cam_controller_debug_writemaster      (<connected-to-cam_controller_debug_writemaster>),      //                             .debug_writemaster
+		.cam_controller_debug_addressmaster    (<connected-to-cam_controller_debug_addressmaster>),    //                             .debug_addressmaster
+		.cam_controller_debug_pixfifoaclr      (<connected-to-cam_controller_debug_pixfifoaclr>),      //                             .debug_pixfifoaclr
+		.cam_controller_debug_pixfifordusedw   (<connected-to-cam_controller_debug_pixfifordusedw>),   //                             .debug_pixfifordusedw
+		.cam_controller_debug_pixfifowreq      (<connected-to-cam_controller_debug_pixfifowreq>),      //                             .debug_pixfifowreq
+		.cam_controller_debug_writedatamaster  (<connected-to-cam_controller_debug_writedatamaster>),  //                             .debug_writedatamaster
+		.cam_controller_debug_linefifodata     (<connected-to-cam_controller_debug_linefifodata>),     //                             .debug_linefifodata
+		.cam_controller_debug_pixfifodata      (<connected-to-cam_controller_debug_pixfifodata>),      //                             .debug_pixfifodata
 		.clk_clk                               (<connected-to-clk_clk>),                               //                          clk.clk
 		.hps_0_ddr_mem_a                       (<connected-to-hps_0_ddr_mem_a>),                       //                    hps_0_ddr.mem_a
 		.hps_0_ddr_mem_ba                      (<connected-to-hps_0_ddr_mem_ba>),                      //                             .mem_ba

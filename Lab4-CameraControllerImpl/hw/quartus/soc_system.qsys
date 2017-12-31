@@ -40,6 +40,11 @@
    }
    element cam_controller_0.avalon_slave
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
          value = "268437536";
@@ -106,6 +111,11 @@
    }
    element i2c_0.avalon_slave
    {
+      datum _lockedAddress
+      {
+         value = "1";
+         type = "boolean";
+      }
       datum baseAddress
       {
          value = "268437512";
@@ -210,6 +220,14 @@
       {
          value = "9";
          type = "int";
+      }
+   }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
       }
    }
    element soc_system
