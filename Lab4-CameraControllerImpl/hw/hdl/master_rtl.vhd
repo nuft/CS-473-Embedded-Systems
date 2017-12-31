@@ -10,8 +10,8 @@ entity master is
 		--fifo signals
 		
 		fifo_rdreq : out std_logic;
-		fifo_empty: in std_logic;
-		fifo_full: in std_logic;
+		--fifo_empty: in std_logic;
+		fifo_rdusedw: in std_logic_vector(4 downto 0);
 		--aclr	 => aclr_sig,
 		fifo_data_out: in std_logic_vector(15 downto 0);
 		--wrreq	 => wrreq_sig,
@@ -38,6 +38,7 @@ entity master is
 architecture rtl of master is
 	constant BURST_CNT_MAX: integer:= 8;
 	constant STORE_CNT_MAX: integer:= 16;	
+	constant FIFO_ALMOST_FULL: integer:=16;
 	type state_type is (IDLE, STORE, WRITE);
 	type out_reg is array(0 to 7) of std_logic_vector(31 downto 0);
 	signal state_reg, state_next: state_type;
@@ -65,12 +66,12 @@ begin
 	end process SREG;
 	
 	--next state logic
-	NSL: process(state_reg, fifo_full, burst_finish, store_finish, offset_reg)
+	NSL: process(state_reg, fifo_rdusedw, burst_finish, store_finish, offset_reg)
 	begin
 		offset_next <= offset_reg;
 		state_next <= state_reg;
 		case state_reg is
-		when IDLE => if fifo_full = '1' then
+		when IDLE => if fifo_rdusedw >= std_logic_vector(to_unsigned(FIFO_ALMOST_FULL, fifo_rdusedw'length)) then
 						state_next <= STORE;
 					end if;
 		when STORE => if store_finish then
@@ -78,7 +79,7 @@ begin
 					end if;
 		when WRITE => if burst_finish then
 						state_next <= IDLE;
-						offset_next <= std_logic_vector(unsigned(offset_reg) + to_unsigned(BURST_CNT_MAX, offset_next'length));
+						offset_next <= std_logic_vector(unsigned(offset_reg) + to_unsigned(4*BURST_CNT_MAX, offset_next'length));
 						end if;
 		end case; 
 	end process NSL;
@@ -110,7 +111,7 @@ begin
 	
 	-- status signals
 	burst_finish <= true when burst_next = BURST_CNT_MAX else false;
-	store_finish <= true when store_next = STORE_CNT_MAX else false;
+	store_finish <= true when store_next = STORE_CNT_MAX-1 else false;
 	--routing MUX
 	RMUX: process(store_cnt, burst_cnt, addr_reg, offset_reg, data_out_reg, state_reg, fifo_data_out, data_reg, data2_reg, burst_reg, store_reg)
 	begin
@@ -146,10 +147,10 @@ begin
 		when WRITE => av_address <= std_logic_vector(unsigned(addr_reg) + unsigned(offset_reg));
 					  av_burst_count <= std_logic_vector(to_unsigned(BURST_CNT_MAX, av_burst_count'length));
 					  av_write <= '1';
-					  if burst_reg < 8 then
+					--  if burst_reg < 8 then
 					  	av_byte_enable <= (others => '1');
 					 	av_write_data <= data_out_reg(to_integer(burst_reg));
-					  end if;
+					--  end if;
 					  burst_next <= burst_cnt;
 		end case;
 		end process RMUX;
