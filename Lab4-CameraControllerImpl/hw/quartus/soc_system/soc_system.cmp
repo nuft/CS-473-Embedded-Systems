@@ -9,13 +9,16 @@
 			cam_controller_debug_linefifoclear    : out   std_logic;                                        -- debug_linefifoclear
 			cam_controller_debug_linefiforr       : out   std_logic;                                        -- debug_linefiforr
 			cam_controller_debug_linefifowreq     : out   std_logic;                                        -- debug_linefifowreq
-			cam_controller_debug_pixfifofull      : out   std_logic;                                        -- debug_pixfifofull
 			cam_controller_debug_pixfiforreq      : out   std_logic;                                        -- debug_pixfiforreq
-			cam_controller_debug_pixeldatawreq    : out   std_logic;                                        -- debug_pixeldatawreq
 			cam_controller_debug_burstcountmaster : out   std_logic_vector(3 downto 0);                     -- debug_burstcountmaster
 			cam_controller_debug_byteenablemaster : out   std_logic_vector(3 downto 0);                     -- debug_byteenablemaster
 			cam_controller_debug_waitreqmaster    : out   std_logic;                                        -- debug_waitreqmaster
 			cam_controller_debug_writemaster      : out   std_logic;                                        -- debug_writemaster
+			cam_controller_debug_addressmaster    : out   std_logic_vector(31 downto 0);                    -- debug_addressmaster
+			cam_controller_debug_pixfifoaclr      : out   std_logic;                                        -- debug_pixfifoaclr
+			cam_controller_debug_pixfifordusedw   : out   std_logic_vector(4 downto 0);                     -- debug_pixfifordusedw
+			cam_controller_debug_pixfifowreq      : out   std_logic;                                        -- debug_pixfifowreq
+			cam_controller_debug_writedatamaster  : out   std_logic_vector(31 downto 0);                    -- debug_writedatamaster
 			clk_clk                               : in    std_logic                     := 'X';             -- clk
 			hps_0_ddr_mem_a                       : out   std_logic_vector(14 downto 0);                    -- mem_a
 			hps_0_ddr_mem_ba                      : out   std_logic_vector(2 downto 0);                     -- mem_ba
