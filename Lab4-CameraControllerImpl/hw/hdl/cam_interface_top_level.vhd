@@ -37,8 +37,9 @@ entity cam_component is
 	DEBUG_LineFIFOwreq		: OUT std_logic;
 	DEBUG_LineFIFOclear		: OUT std_logic;
 
-	DEBUG_PixelDatawreq		: OUT std_logic;
+	DEBUG_PixFIFOwreq		: OUT std_logic;
     DEBUG_PixFIFOfull		: OUT std_logic;
+	DEBUG_PixFIFOaclr		: OUT std_logic;
     DEBUG_PixFIFOrreq		: OUT std_logic;
 
 	DEBUG_AddressUpdate		: OUT  std_logic;
@@ -61,12 +62,11 @@ architecture top_level of cam_component is
 	 signal LineFIFOclear    : std_logic;
 	 
 	 --pixfifo
-	 signal PixelDatawreq    : std_logic;
-     signal PixelData        : std_logic_vector (15 DOWNTO 0);
-     signal PixFIFOempty	 : std_logic;
-     signal PixFIFOfull		 : std_logic;
+	 signal PixFIFOwreq    : std_logic;
+     signal PixFIFOData        : std_logic_vector (15 DOWNTO 0);
      signal PixFIFOdataOut   : std_logic_vector (15 DOWNTO 0);
      signal PixFIFOrreq      : std_logic;
+     signal PixFIFOrdusedw	 : std_logic_vector (4 DOWNTO 0);
      
      --camera_interface to master 
      signal  AddressUpdate   :  std_logic;
@@ -91,8 +91,9 @@ begin
 	DEBUG_LineFIFOwreq <= LineFIFOwreq;
 	DEBUG_LineFIFOclear <= LineFIFOclear;
 
-	DEBUG_PixelDatawreq <= PixelDatawreq;
+	DEBUG_PixFIFOwreq <= PixFIFOwreq;
 	DEBUG_PixFIFOfull <= PixFIFOfull;
+	DEBUG_PixFIFOaclr <= PixFIFOaclr;
 	DEBUG_PixFIFOrreq <= PixFIFOrreq;
 	
 	DEBUG_AddressUpdate <= AddressUpdate;
@@ -130,8 +131,7 @@ begin
 		port map (
 			main_clk => Clk,
 			fifo_rdreq => PixFIFOrreq,
-			fifo_empty => PixFIFOempty,
-			fifo_full => PixFIFOfull,
+			fifo_rdusedw => PixFIFOrdusedw,
 			fifo_data_out => PixFIFOdataOut,
 			av_waitreq => WaitreqMaster,
 			av_address => iAddressMaster,
@@ -155,8 +155,9 @@ begin
 				LineFIFOwreq => LineFIFOwreq,
 				LineFIFOData => LineFIFOData,
 				LineFIFOclear => LineFIFOclear,
-				PixelDatawreq => PixelDatawreq,
-				PixelData => PixelData,
+				PixFIFOwreq => PixFIFOwreq,
+				PixFIFOData => PixFIFOData,
+				PixFIFOaclr => PixFIFOaclr,
 				AddressUpdate => AddressUpdate
 			);
 	LINEFIFO: entity work.linefifo
@@ -170,14 +171,15 @@ begin
 		);
 	PIXFIFO: entity work.pixfifo
 		port map(
-			data    => PixelData,
+			aclr	=> PixFIFOaclr,
+			data    => PixFIFOData,
 			rdclk   => Clk,
 			rdreq   => PixFIFOrreq,
 			wrclk   => GPIO_1_D5M_PIXCLK,
-			wrreq   => PixelDatawreq,
+			wrreq   => PixFIFOwreq,
 			q       => PixFIFOdataOut,
 			rdempty => PixFIFOempty,
-			wrfull  => PixFIFOfull
+			rdusedw => PixFIFOrdusedw
 		);
 		
     pEndIrq: process(Clk, nReset)
