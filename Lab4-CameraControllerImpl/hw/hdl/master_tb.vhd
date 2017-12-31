@@ -15,20 +15,20 @@ architecture bench of master_tb is
 
 	signal fifo_rdreq_tb : std_logic;
 	signal fifo_empty_tb:  std_logic;
-	signal fifo_full_tb:  std_logic;
+	signal fifo_rdusedw_tb:  std_logic_vector(4 downto 0);
 	--aclr	 => aclr_sig,
 	signal fifo_data_out_tb: std_logic_vector(NBITS-1 downto 0);
 	--wrreq	 => wrreq_sig,
-	signal fifo_almost_full_tb: std_logic;
+	--signal fifo_almost_full_tb: std_logic;
 	--usedw	 => usedw_sig
 
 	--avalon signals
 
-	signal av_waitreq_tb:  std_logic;
+	signal av_waitreq_tb:  std_logic := '0';
 	signal av_address_tb:  std_logic_vector(2*NBITS-1 downto 0);
-	signal av_burst_count_tb:  std_logic_vector(NBITS-1 downto 0);
+	signal av_burst_count_tb:  std_logic_vector(3 downto 0);
 	signal av_write_tb: std_logic;
-	signal av_byte_enable_tb: std_logic_vector(integer(ceil(log(real(NBITS))))-1 downto 0);
+	signal av_byte_enable_tb: std_logic_vector(3 downto 0);
 	signal av_write_data_tb: std_logic_vector(2*NBITS-1 downto 0);
 	signal av_nreset_tb: std_logic;
 
@@ -43,14 +43,13 @@ architecture bench of master_tb is
 	--constant DATA_1: data_array_int := ((1),(12),(3),(4),(6),(7),(8),(9));
 begin
 	DUT: entity work.master
-		generic map(NBITS => NBITS, NBURSTS => NBURSTS)
 		port map (
 				main_clk => main_clk_tb,
 				fifo_rdreq => fifo_rdreq_tb,
-				fifo_empty => fifo_empty_tb,
-				fifo_full => fifo_full_tb,
+				--fifo_empty => fifo_empty_tb,
+				fifo_rdusedw => fifo_rdusedw_tb,
 				fifo_data_out => fifo_data_out_tb,
-				fifo_almost_full => fifo_almost_full_tb,
+				--fifo_almost_full => fifo_almost_full_tb,
 				av_waitreq => av_waitreq_tb,
 				av_address => av_address_tb,
 				av_burst_count => av_burst_count_tb,
@@ -64,13 +63,14 @@ begin
 				);
 		main_clk_tb <= not main_clk_tb after CLK_PER/2 when not done;
 		av_nreset_tb <= '1', '0' after CLK_PER/4, '1' after CLK_PER*3/4;
+		av_waitreq_tb <= not av_waitreq_tb after CLK_PER*2 when not done;
 		process
 			procedure get_full is
 			begin
 				wait for 2*CLK_PER;
-				fifo_full_tb <= '1';
+				fifo_rdusedw_tb <= std_logic_vector(to_unsigned(16, fifo_rdusedw_tb'length));
 				wait until rising_edge(main_clk_tb);
-				fifo_full_tb <= '0';
+				fifo_rdusedw_tb <= (others => '0');
 			end procedure get_full; 
 			
 			procedure send_data(data_in:data_array_int) is
@@ -101,7 +101,7 @@ begin
 			wait for 10*CLK_PER;
 			get_full;
 			send_data((2,0,4,8,16,32,64,128, 256, -256, -128, -64, -32, -16, 0, -2));
-			wait for 10*CLK_PER;
+			wait for 20*CLK_PER;
 			done <= true;
 		end process;	
 			
