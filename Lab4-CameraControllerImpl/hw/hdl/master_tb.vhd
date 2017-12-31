@@ -96,9 +96,15 @@ begin
 			load_image(20);
 			get_full;
 			send_data((2,0,4,8,16,32,64,128, 256, -256, -128, -64, -32, -16, 0, -2));
-			wait for CLK_PER;
 			
-			wait for 10*CLK_PER;
+			wait for 20*CLK_PER;
+			get_full;
+			send_data((2,0,4,8,16,32,64,128, 256, -256, -128, -64, -32, -16, 0, -2));
+			wait for 20*CLK_PER;
+			load_image(50);
+			get_full;
+			send_data((2,0,4,8,16,32,64,128, 256, -256, -128, -64, -32, -16, 0, -2));
+			wait for 20*CLK_PER;
 			get_full;
 			send_data((2,0,4,8,16,32,64,128, 256, -256, -128, -64, -32, -16, 0, -2));
 			wait for 20*CLK_PER;

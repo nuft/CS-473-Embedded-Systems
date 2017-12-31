@@ -53,8 +53,7 @@ architecture rtl of master is
 begin
 	
 	--slave inputs
-	addr_next <= sv_image_address when sv_address_update = '1' else addr_reg;
-	--offset_next <= (others => '0') when sv_address_update = '1';
+	
 	--state register
 	SREG: process(main_clk, av_nreset)
 	begin
@@ -66,9 +65,8 @@ begin
 	end process SREG;
 	
 	--next state logic
-	NSL: process(state_reg, fifo_rdusedw, burst_finish, store_finish, offset_reg)
+	NSL: process(state_reg, fifo_rdusedw, burst_finish, store_finish)
 	begin
-		offset_next <= offset_reg;
 		state_next <= state_reg;
 		case state_reg is
 		when IDLE => if fifo_rdusedw >= std_logic_vector(to_unsigned(FIFO_ALMOST_FULL, fifo_rdusedw'length)) then
@@ -78,12 +76,23 @@ begin
 						state_next <= WRITE;
 					end if;
 		when WRITE => if burst_finish then
+						
 						state_next <= IDLE;
-						offset_next <= std_logic_vector(unsigned(offset_reg) + to_unsigned(4*BURST_CNT_MAX, offset_next'length));
-						end if;
+					end if;
 		end case; 
 	end process NSL;
 	
+	ADDR: process(sv_image_address, sv_address_update, burst_finish, offset_reg, addr_reg)
+	begin
+		addr_next <= addr_reg;
+		offset_next <= offset_reg;
+		if sv_address_update = '1' then
+			addr_next <= sv_image_address;
+			offset_next <= (others => '0');
+		elsif burst_finish then
+			offset_next <= std_logic_vector(unsigned(offset_reg) + to_unsigned(4*BURST_CNT_MAX, offset_next'length));
+		end if;
+	end process ADDR;
 	--control and data registers
 	DREG: process(main_clk, av_nreset)
 	begin
