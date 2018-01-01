@@ -36,6 +36,7 @@ begin
     pRegWr: process(Clk, nReset)
     begin
         ImageAddress <= iRegImageAddress;
+        Camera_nReset <= iRegControl(1);
         if nReset = '0' then
             -- Register reset values
             iRegControl <= (others => '0');
@@ -77,18 +78,6 @@ begin
                     when others => null;
                 end case;
             end if;
-        end if;
-    end process;
-
-    -- Enable Out
-    pEnOut: process(Clk, nReset)
-    begin
-        if nReset = '0' then
-            --CameraIfEnable <= '0';
-            Camera_nReset <= '0';
-        elsif rising_edge(Clk) then
-            --CameraIfEnable <= iRegControl(0);
-            Camera_nReset <= iRegControl(1);
         end if;
     end process;
 
