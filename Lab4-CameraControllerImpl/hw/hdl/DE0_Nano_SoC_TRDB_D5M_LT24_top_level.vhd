@@ -350,15 +350,25 @@ begin
         pll_0_outclk0_clk                   => GPIO_1_D5M_XCLKIN                    --                pll_0_outclk0.clk
     );
 
+    --GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
+    --GPIO_0_LT24_D(1) <= GPIO_1_D5M_PIXCLK;
+    --GPIO_0_LT24_D(2) <= INT_cam_controller_debug_linefifowreq;
+    --GPIO_0_LT24_D(3) <= INT_cam_controller_debug_linefiforr;
+    --GPIO_0_LT24_D(4) <= INT_cam_controller_debug_pixfifowreq;
+    --GPIO_0_LT24_D(9 DOWNTO 5) <= INT_cam_controller_debug_linefifodata;
+    --GPIO_0_LT24_D(15 DOWNTO 10) <= INT_cam_controller_debug_pixfifodata(5 DOWNTO 0);
+    --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfiforreq;
+    --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_linefifoclear;
+    --GPIO_0_LT24_RS <= INT_cam_controller_debug_addressupdate;
+
     GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
-    GPIO_0_LT24_D(1) <= GPIO_1_D5M_PIXCLK;
-    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_linefifowreq;
-    GPIO_0_LT24_D(3) <= INT_cam_controller_debug_linefiforr;
-    GPIO_0_LT24_D(4) <= INT_cam_controller_debug_pixfifowreq;
-    GPIO_0_LT24_D(9 DOWNTO 5) <= INT_cam_controller_debug_linefifodata;
-    GPIO_0_LT24_D(15 DOWNTO 10) <= INT_cam_controller_debug_pixfifodata(5 DOWNTO 0);
-    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfiforreq;
-    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_linefifoclear;
-    GPIO_0_LT24_RS <= INT_cam_controller_debug_addressupdate;
+    GPIO_0_LT24_D(1) <= INT_cam_controller_debug_pixfiforreq;
+    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_burstcountmaster(3);
+    GPIO_0_LT24_D(3) <= INT_cam_controller_debug_writemaster;
+    GPIO_0_LT24_D(4) <= INT_cam_controller_debug_waitreqmaster;
+    GPIO_0_LT24_D(15 DOWNTO 5) <= INT_cam_controller_debug_addressmaster(10 DOWNTO 0);
+    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_addressmaster(11);
+    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_addressmaster(12);
+    GPIO_0_LT24_RS <= INT_cam_controller_debug_addressmaster(13);
 
 end;
