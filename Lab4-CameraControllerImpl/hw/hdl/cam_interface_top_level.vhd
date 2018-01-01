@@ -44,6 +44,9 @@ entity cam_component is
     DEBUG_PixFIFOrdusedw	: OUT std_logic_vector(4 DOWNTO 0);
     DEBUG_PixFIFOData		: OUT std_logic_vector (15 DOWNTO 0);
 
+    DEBUG_PixelState        : OUT std_logic_vector (1 DOWNTO 0);
+    DEBUG_LineState         : OUT std_logic_vector (1 DOWNTO 0);
+
 	DEBUG_AddressUpdate		: OUT  std_logic;
 
 	DEBUG_WaitreqMaster		: OUT std_logic;
@@ -167,7 +170,9 @@ begin
 				PixFIFOwreq => PixFIFOwreq,
 				PixFIFOData => PixFIFOData,
 				PixFIFOaclr => PixFIFOaclr,
-				AddressUpdate => AddressUpdate
+                AddressUpdate => AddressUpdate,
+                DEBUG_PixelState => DEBUG_PixelState,
+                DEBUG_LineState => DEBUG_LineState
 			);
 	LINEFIFO: entity work.linefifo
 		port map(
