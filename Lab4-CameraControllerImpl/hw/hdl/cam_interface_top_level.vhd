@@ -154,7 +154,8 @@ begin
         );
     CAMERA_INTERFACE: entity work.camera_interface
         port map (
-            Clk => GPIO_1_D5M_PIXCLK,
+            Clk => Clk,
+            PIXCLK => GPIO_1_D5M_PIXCLK,
             nReset => nReset,
             Enable => CameraIfEnable,
             CamData => GPIO_1_D5M_D(11 downto 7),
@@ -168,6 +169,7 @@ begin
             PixFIFOData => PixFIFOData,
             PixFIFOaclr => PixFIFOaclr,
             AddressUpdate => AddressUpdate,
+            ImageEndIrq => ImageEndIrq,
             DEBUG_PixelState => DEBUG_PixelState,
             DEBUG_LineState => DEBUG_LineState
         );
@@ -191,22 +193,5 @@ begin
             q       => PixFIFOdataOut,
             rdusedw => PixFIFOrdusedw
         );
-
-    pEndIrq: process(Clk, nReset)
-    variable last_fvalid: std_logic;
-    begin
-        if nReset = '0' then
-            last_fvalid := '0';
-        elsif rising_edge(Clk) then
-            -- falling edge of FValid
-            if (not GPIO_1_D5M_FVAL and last_fvalid) = '1' then
-                ImageEndIrq <= '1';
-            else
-                ImageEndIrq <= '0';
-            end if;
-            last_fvalid := GPIO_1_D5M_FVAL;
-        end if;
-    end process;
-
 end architecture top_level;
 

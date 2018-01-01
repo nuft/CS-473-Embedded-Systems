@@ -4,7 +4,8 @@ use ieee.numeric_std.all;
 
 Entity camera_interface is
 Port(
-    Clk             : IN std_logic; -- Clk will be PIXCLK from Camera
+    Clk             : IN std_logic; -- FPGA main clock
+    PIXCLK          : IN std_logic; -- PIXCLK from Camera
     nReset          : IN std_logic;
 
     Enable          : IN std_logic; -- ignores camera input when not enabled
@@ -25,6 +26,7 @@ Port(
     PixFIFOData     : OUT std_logic_vector (15 DOWNTO 0);
     PixFIFOaclr     : OUT std_logic;
     AddressUpdate   : OUT std_logic;
+    ImageEndIrq     : OUT std_logic;
 
     -- debug signals
     DEBUG_PixelState      : OUT std_logic_vector (1 DOWNTO 0);
@@ -50,7 +52,7 @@ Architecture comp of camera_interface is
     signal LineState    : LineStateType;
     signal LineState_next : LineStateType;
 
-    signal  FrameStart : std_logic; -- is '1' when the interface received a frame start
+    signal Active : std_logic; -- is '1' when the interface received a frame start
 
     signal CamDataSample : std_logic_vector(4 DOWNTO 0);
     signal Red : std_logic_vector(4 DOWNTO 0);
@@ -77,20 +79,20 @@ begin
     end process;
 
     -- FSM
-    pStateTransition: process(Clk, nReset)
+    pStateTransition: process(PIXCLK, nReset)
     begin
-        if nReset = '0' then
+        if nReset = '0' or Active = '0' then
             PixelState <= IDLE;
             LineState <= IDLE;
             CamDataSample <= (others => '0');
-        elsif rising_edge(Clk) then
+        elsif rising_edge(PIXCLK) then
             PixelState <= PixelState_next;
             LineState <= LineState_next;
             CamDataSample <= CamData;
         end if;
     end process;
 
-    pNextStateLogic: process(FValid, LValid, FrameStart, PixelState, LineState)
+    pNextStateLogic: process(FValid, LValid, Active, PixelState, LineState)
     begin
         -- default values
         LineFIFOwreq <= '0';
@@ -99,7 +101,7 @@ begin
         PixelState_next <= PixelState;
 
         LineState_next <= LineState;
-        if FValid = '1' and FrameStart = '1' then
+        if FValid = '1' and Active = '1' then
             case LineState is
                 when IDLE =>
                     if LValid = '1' then
@@ -158,20 +160,22 @@ begin
         end case;
     end process;
 
-    pFrameStart: process(Clk, nReset)
+    pActive: process(PIXCLK, nReset)
     variable last_fvalid: std_logic;
     begin
         if nReset = '0' then
             last_fvalid := '1';
-            FrameStart <= '0';
+            Active <= '0';
             AddressUpdate <= '0';
             PixFIFOaclr <= '0';
             LineFIFOclear <= '0';
-        elsif rising_edge(Clk) then
+        elsif rising_edge(PIXCLK) then
             -- rising edge of FValid
             if (FValid and not last_fvalid) = '1' then
                 if Enable = '1' then
-                    FrameStart <= '1';
+                    Active <= '1';
+                else
+                    Active <= '0';
                 end if;
                 PixFIFOaclr <= '1'; -- clear PixFIFO
                 LineFIFOclear <= '1'; -- clear LineFIFO
@@ -181,10 +185,20 @@ begin
                 LineFIFOclear <= '0';
                 AddressUpdate <= '0';
             end if;
+            last_fvalid := FValid;
+        end if;
+    end process;
 
-            -- falling edge of FValid
-            if (not FValid and last_fvalid) = '1' then
-                FrameStart <= '0';
+    pEndIrq: process(Clk, nReset)
+    variable last_fvalid: std_logic;
+    begin
+        if nReset = '0' then
+            last_fvalid := '0';
+        elsif rising_edge(Clk) then
+            ImageEndIrq <= '0';
+            -- falling edge of FValid and interface active
+            if (not FValid and last_fvalid) = '1' and Active = '1' then
+                ImageEndIrq <= '1';
             end if;
             last_fvalid := FValid;
         end if;

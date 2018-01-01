@@ -10,6 +10,7 @@ architecture tb of camera_interface_tb is
 
     component camera_interface
         port (Clk           : in std_logic;
+              PIXCLK        : in std_logic;
               nReset        : in std_logic;
               Enable        : in std_logic;
               CamData       : in std_logic_vector (4 downto 0);
@@ -23,6 +24,7 @@ architecture tb of camera_interface_tb is
               PixFIFOData   : out std_logic_vector (15 downto 0);
               PixFIFOaclr   : out std_logic;
               AddressUpdate : out std_logic;
+              ImageEndIrq   : out std_logic;
               DEBUG_PixelState : out std_logic_vector (1 DOWNTO 0);
               DEBUG_LineState  : out std_logic_vector (1 DOWNTO 0));
     end component;
@@ -41,6 +43,7 @@ architecture tb of camera_interface_tb is
     signal PixFIFOData   : std_logic_vector (15 downto 0);
     signal PixFIFOaclr   : std_logic;
     signal AddressUpdate : std_logic;
+    signal ImageEndIrq   : std_logic;
     signal DEBUG_PixelState : std_logic_vector (1 DOWNTO 0);
     signal DEBUG_LineState  : std_logic_vector (1 DOWNTO 0);
 
@@ -52,6 +55,7 @@ begin
 
     dut : camera_interface
     port map (Clk           => Clk,
+              PIXCLK        => Clk,
               nReset        => nReset,
               Enable        => Enable,
               CamData       => CamData,
@@ -65,6 +69,7 @@ begin
               PixFIFOData   => PixFIFOData,
               PixFIFOaclr   => PixFIFOaclr,
               AddressUpdate => AddressUpdate,
+              ImageEndIrq   => ImageEndIrq,
               DEBUG_PixelState  => DEBUG_PixelState,
               DEBUG_LineState   => DEBUG_LineState);
 
