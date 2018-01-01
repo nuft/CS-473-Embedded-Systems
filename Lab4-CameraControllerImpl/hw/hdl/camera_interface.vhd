@@ -4,8 +4,11 @@ use ieee.numeric_std.all;
 
 Entity camera_interface is
 Port(
-    Clk             : IN std_logic; -- Clk will be PIXCLK from Camera
+    Clk             : IN std_logic; -- FPGA main clock
+    PIXCLK          : IN std_logic; -- PIXCLK from Camera
     nReset          : IN std_logic;
+
+    Enable          : IN std_logic; -- ignores camera input when not enabled
 
     -- Camera input signals
     CamData         : IN std_logic_vector (4 DOWNTO 0);
@@ -22,153 +25,180 @@ Port(
     PixFIFOwreq     : OUT std_logic;
     PixFIFOData     : OUT std_logic_vector (15 DOWNTO 0);
     PixFIFOaclr     : OUT std_logic;
-    AddressUpdate   : OUT std_logic
+    AddressUpdate   : OUT std_logic;
+    ImageEndIrq     : OUT std_logic;
+
+    -- debug signals
+    DEBUG_PixelState      : OUT std_logic_vector (1 DOWNTO 0);
+    DEBUG_LineState       : OUT std_logic_vector (1 DOWNTO 0)
 );
 End camera_interface;
 
 Architecture comp of camera_interface is
-    type BayerStateType is (
-        IDLE,
-        BLUE, -- receive BLUE and GREEN1 sensor values
-        RED   -- receive RED and GREEN2 sensor values
-    );
-    signal BayerState   : BayerStateType;
-
     type PixelStateType is (
         IDLE,
-        PPROCESS,
-        POUTPUT,
-        PSKIP
+        PBUFFER, -- receive BLUE and GREEN1 sensor values
+        PWRITE   -- receive RED and GREEN2 sensor values
     );
     signal PixelState   : PixelStateType;
+    signal PixelState_next : PixelStateType;
 
     type LineStateType is (
+        IDLE,
         LBUFFER,
-        LPROCESS,
-        LSKIP1,
-        LSKIP2
+        PAUSE,
+        LPROCESS
     );
     signal LineState    : LineStateType;
+    signal LineState_next : LineStateType;
 
-    signal BayerActive  : std_logic;
+    signal Active : std_logic; -- is '1' when the interface received a frame start
 
-    signal CamDataBuf : std_logic_vector(4 DOWNTO 0);
-    signal BlueCache : std_logic_vector(4 DOWNTO 0);
+    signal CamDataSample : std_logic_vector(4 DOWNTO 0);
+    signal Red : std_logic_vector(4 DOWNTO 0);
     signal GreenCache : std_logic_vector(4 DOWNTO 0);
-
+    signal Green : std_logic_vector(5 DOWNTO 0);
+    signal Blue : std_logic_vector(4 DOWNTO 0);
 begin
-    pBayerFSM: process(Clk, nReset)
-    begin
-        if nReset = '0' then
-            BayerState <= IDLE;
-            LineFIFOrreq <= '0';
+    PixFIFOData <= Red & Green & Blue;
 
-            PixFIFOData <= (others => '0');
+    pDebug: process(PixelState, LineState)
+    begin
+        case PixelState is
+            when IDLE => DEBUG_PixelState <= "00";
+            when PBUFFER => DEBUG_PixelState <= "01";
+            when PWRITE => DEBUG_PixelState <= "10";
+        end case;
+
+        case LineState is
+            when IDLE => DEBUG_LineState <= "00";
+            when LBUFFER => DEBUG_LineState <= "01";
+            when PAUSE => DEBUG_LineState <= "10";
+            when LPROCESS => DEBUG_LineState <= "11";
+        end case;
+    end process;
+
+    -- FSM
+    pStateTransition: process(PIXCLK, nReset)
+    begin
+        if nReset = '0' or Active = '0' then
             PixelState <= IDLE;
-
-            BlueCache <= (others => '0');
-            GreenCache <= (others => '0');
-        elsif rising_edge(Clk) then
-            CamDataBuf <= CamData;
-            case BayerState is
-                when IDLE =>
-                    if BayerActive = '0' then
-                        BayerState <= IDLE;
-                        LineFIFOrreq <= '0';
-                    else
-                        BayerState <= BLUE;
-                        LineFIFOrreq <= '1';
-                    end if;
-                when BLUE =>
-                    BlueCache <= CamDataBuf;
-                    GreenCache <= LineFIFOData;
-                    BayerState <= RED;
-                when RED =>
-                    PixFIFOData(15 DOWNTO 11) <= LineFIFOData;
-                    PixFIFOData(4 DOWNTO 0) <= BlueCache;
-                    PixFIFOData(10 DOWNTO 5) <= std_logic_vector(
-                                                    unsigned('0' & GreenCache)
-                                                  + unsigned(CamDataBuf)
-                                                );
-                    if BayerActive = '0' then
-                        BayerState <= IDLE;
-                        LineFIFOrreq <= '0';
-                    else
-                        BayerState <= BLUE;
-                    end if;
-            end case;
-
-            PixFIFOwreq <= '0'; -- default
-            case PixelState is
-                when IDLE =>
-                    if BayerActive = '0' then
-                        PixelState <= IDLE;
-                    else
-                        PixelState <= PPROCESS;
-                    end if;
-                when PPROCESS =>
-                    PixelState <= POUTPUT;
-                when POUTPUT =>
-                    PixFIFOwreq <= '1';
-                    PixelState <= PSKIP;
-                when PSKIP =>
-                    PixelState <= IDLE;
-            end case;
-
+            LineState <= IDLE;
+            CamDataSample <= (others => '0');
+        elsif rising_edge(PIXCLK) then
+            PixelState <= PixelState_next;
+            LineState <= LineState_next;
+            CamDataSample <= CamData;
         end if;
     end process;
 
-    BayerActive <= '1' when LValid = '1' and
-                            FValid = '1' and
-                            LineState = LPROCESS
-                            else '0';
-
-    LineFIFOwreq <= '1' when LValid = '1' and
-                            FValid = '1' and
-                            LineState = LBUFFER
-                            else '0';
-
-    pLineFSM: process(Clk, nReset)
-    variable last_lvalid: std_logic;
+    pNextStateLogic: process(FValid, LValid, Active, PixelState, LineState)
     begin
-        if nReset = '0' or FValid = '0' then
-            last_lvalid := '0';
-            LineState <= LBUFFER;
-            LineFIFOclear <= '0';
-        elsif rising_edge(Clk) then
-            -- falling edge of LValid
-            if (not LValid and last_lvalid) = '1' then
-                LineFIFOclear <= '0'; -- default
-                case LineState is
-                    when LBUFFER => LineState <= LPROCESS;
-                    when LPROCESS => LineState <= LSKIP1;
-                    when LSKIP1 =>
-                        LineFIFOclear <= '1';
-                        LineState <= LSKIP2;
-                    when LSKIP2 =>
-                        LineState <= LBUFFER;
-                end case;
-            end if;
-            last_lvalid := LValid;
+        -- default values
+        LineFIFOwreq <= '0';
+        LineFIFOrreq <= '0';
+        PixFIFOwreq <= '0';
+        PixelState_next <= PixelState;
+
+        LineState_next <= LineState;
+        if FValid = '1' and Active = '1' then
+            case LineState is
+                when IDLE =>
+                    if LValid = '1' then
+                        LineState_next <= LBUFFER;
+                        LineFIFOwreq <= '1';
+                    end if;
+                when LBUFFER =>
+                    if LValid = '0' then
+                        LineState_next <= PAUSE;
+                    else
+                        LineFIFOwreq <= '1';
+                    end if;
+                when PAUSE =>
+                    if LValid = '1' then
+                        LineState_next <= LPROCESS;
+                    end if;
+                when LPROCESS =>
+                    if LValid = '0' then
+                        LineState_next <= IDLE;
+                    end if;
+            end case;
+        else
+            LineState_next <= IDLE;
         end if;
+
+        case PixelState is
+            when IDLE =>
+                Red <= (others => '0');
+                Green <= (others => '0');
+                GreenCache <= (others => '0');
+                Blue <= (others => '0');
+
+                LineFIFOrreq <= '0';
+
+                -- rising edge of LValid with next state LPROCESS
+                if LineState = PAUSE and LValid = '1' then
+                    PixelState_next <= PBUFFER;
+                end if;
+            when PBUFFER => -- Blue & Green1
+                LineFIFOrreq <= '1';
+                Blue <= CamDataSample;
+                GreenCache <= LineFIFOData;
+                PixelState_next <= PWRITE;
+            when PWRITE => -- Red & Green2
+                LineFIFOrreq <= '1';
+                PixFIFOwreq <= '1';
+                Red <= LineFIFOData;
+                Green <= std_logic_vector(unsigned('0' & GreenCache) + unsigned(CamDataSample));
+
+                -- falling edge of LValid with next state IDLE
+                if LineState = LPROCESS and LValid = '0' then
+                    PixelState_next <= IDLE;
+                else
+                    PixelState_next <= PBUFFER;
+                end if;
+        end case;
     end process;
 
-
-    pFrameStart: process(Clk, nReset)
+    pActive: process(PIXCLK, nReset)
     variable last_fvalid: std_logic;
     begin
-        if nReset = '0' or FValid = '0' then
-            last_fvalid := '0';
+        if nReset = '0' then
+            last_fvalid := '1';
+            Active <= '0';
             AddressUpdate <= '0';
             PixFIFOaclr <= '0';
-        elsif rising_edge(Clk) then
+            LineFIFOclear <= '0';
+        elsif rising_edge(PIXCLK) then
             -- rising edge of FValid
             if (FValid and not last_fvalid) = '1' then
+                if Enable = '1' then
+                    Active <= '1';
+                else
+                    Active <= '0';
+                end if;
                 PixFIFOaclr <= '1'; -- clear PixFIFO
+                LineFIFOclear <= '1'; -- clear LineFIFO
                 AddressUpdate <= '1'; -- update image destination address
             else
                 PixFIFOaclr <= '0';
+                LineFIFOclear <= '0';
                 AddressUpdate <= '0';
+            end if;
+            last_fvalid := FValid;
+        end if;
+    end process;
+
+    pEndIrq: process(Clk, nReset)
+    variable last_fvalid: std_logic;
+    begin
+        if nReset = '0' then
+            last_fvalid := '0';
+        elsif rising_edge(Clk) then
+            ImageEndIrq <= '0';
+            -- falling edge of FValid and interface active
+            if (not FValid and last_fvalid) = '1' and Active = '1' then
+                ImageEndIrq <= '1';
             end if;
             last_fvalid := FValid;
         end if;

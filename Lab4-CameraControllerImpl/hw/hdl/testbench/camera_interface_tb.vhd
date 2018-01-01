@@ -10,7 +10,9 @@ architecture tb of camera_interface_tb is
 
     component camera_interface
         port (Clk           : in std_logic;
+              PIXCLK        : in std_logic;
               nReset        : in std_logic;
+              Enable        : in std_logic;
               CamData       : in std_logic_vector (4 downto 0);
               LValid        : in std_logic;
               FValid        : in std_logic;
@@ -21,11 +23,15 @@ architecture tb of camera_interface_tb is
               PixFIFOwreq   : out std_logic;
               PixFIFOData   : out std_logic_vector (15 downto 0);
               PixFIFOaclr   : out std_logic;
-              AddressUpdate : out std_logic);
+              AddressUpdate : out std_logic;
+              ImageEndIrq   : out std_logic;
+              DEBUG_PixelState : out std_logic_vector (1 DOWNTO 0);
+              DEBUG_LineState  : out std_logic_vector (1 DOWNTO 0));
     end component;
 
     signal Clk           : std_logic;
     signal nReset        : std_logic;
+    signal Enable        : std_logic;
     signal CamData       : std_logic_vector (4 downto 0);
     signal LValid        : std_logic;
     signal FValid        : std_logic;
@@ -37,6 +43,9 @@ architecture tb of camera_interface_tb is
     signal PixFIFOData   : std_logic_vector (15 downto 0);
     signal PixFIFOaclr   : std_logic;
     signal AddressUpdate : std_logic;
+    signal ImageEndIrq   : std_logic;
+    signal DEBUG_PixelState : std_logic_vector (1 DOWNTO 0);
+    signal DEBUG_LineState  : std_logic_vector (1 DOWNTO 0);
 
     constant clk_period : time := 20 ns;
     signal tb_clk : std_logic := '0';
@@ -46,7 +55,9 @@ begin
 
     dut : camera_interface
     port map (Clk           => Clk,
+              PIXCLK        => Clk,
               nReset        => nReset,
+              Enable        => Enable,
               CamData       => CamData,
               LValid        => LValid,
               FValid        => FValid,
@@ -57,7 +68,10 @@ begin
               PixFIFOwreq   => PixFIFOwreq,
               PixFIFOData   => PixFIFOData,
               PixFIFOaclr   => PixFIFOaclr,
-              AddressUpdate => AddressUpdate);
+              AddressUpdate => AddressUpdate,
+              ImageEndIrq   => ImageEndIrq,
+              DEBUG_PixelState  => DEBUG_PixelState,
+              DEBUG_LineState   => DEBUG_LineState);
 
     -- Clock generation
     tb_clk <= not tb_clk after clk_period/2 when sim_ended /= '1' else '0';
@@ -85,26 +99,6 @@ begin
         return res_v;
     end function;
 
-    -- Simulate line
-    procedure simLine(
-        constant d0: natural;
-        constant d1: natural;
-        constant d2: natural;
-        constant d3: natural) is
-    begin
-        wait until falling_edge(tb_clk);
-        LValid <= '1';
-        CamData <= std_logic_vector(to_unsigned(d0, CamData'length));
-        wait until falling_edge(tb_clk);
-        CamData <= std_logic_vector(to_unsigned(d1, CamData'length));
-        wait until falling_edge(tb_clk);
-        CamData <= std_logic_vector(to_unsigned(d2, CamData'length));
-        wait until falling_edge(tb_clk);
-        CamData <= std_logic_vector(to_unsigned(d3, CamData'length));
-        wait until falling_edge(tb_clk);
-        LValid <= '0';
-    end procedure simLine;
-
     -- Simulate pixel line pair
     procedure simPixelLine(
         constant fifo0: natural;
@@ -117,6 +111,7 @@ begin
         constant d2: natural;
         constant d3: natural) is
     begin
+        wait for clk_period;
         wait until falling_edge(tb_clk);
         LValid <= '1';
         CamData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
@@ -130,6 +125,8 @@ begin
         CamData <= std_logic_vector(to_unsigned(fifo3, CamData'length));
         wait until falling_edge(tb_clk);
         LValid <= '0';
+
+        wait for clk_period;
 
         LineFIFOData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
         wait until falling_edge(tb_clk);
@@ -171,6 +168,7 @@ begin
         constant d6: natural;
         constant d7: natural) is
     begin
+        wait for clk_period;
         wait until falling_edge(tb_clk);
         LValid <= '1';
         CamData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
@@ -192,6 +190,8 @@ begin
         CamData <= std_logic_vector(to_unsigned(fifo7, CamData'length));
         wait until falling_edge(tb_clk);
         LValid <= '0';
+
+        wait for clk_period;
 
         LineFIFOData <= std_logic_vector(to_unsigned(fifo0, CamData'length));
         wait until falling_edge(tb_clk);
@@ -253,6 +253,7 @@ begin
     procedure TEST_RESET is
     begin
         -- init values
+        Enable <= '1';
         CamData <= (others => '0');
         LValid <= '0';
         FValid <= '0';
@@ -272,20 +273,29 @@ begin
         TEST_RESET;
         -- TEST_BayerToRGB;
 
-        --FValid <= '1';
-        --simLine(1,2,3,4);
-        --simLine(5,6,7,8);
-        --simLine(1,2,3,4);
-        --simLine(5,6,7,8);
-        --FValid <= '0';
-
         FValid <= '1';
         --simPixelLine(1,2,3,4, 5,6,7,8);
-        --simPixelLine(0,0,0,0, 0,0,0,0); -- skip line
-        simPixelLine(1,2,3,4,5,6,7, 8,9,10,11,12,13,14,15,16);
-        simPixelLine(0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0); -- skip line
-        simPixelLine(1,2,3,4,5,6,7, 8,9,10,11,12,13,14,15,16);
-        simPixelLine(0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0); -- skip line
+        --simPixelLine(b,g,..., g,r,...);
+        simPixelLine(31,31,1,2,0,0,2,4, 31,31,2,1,0,0,4,2);
+        simPixelLine(1,1,2,2,3,3,4,4, 1,1,2,2,3,3,4,4);
+        --simPixelLine(1,2,3,4,5,6,7,8, 9,10,11,12,13,14,15,16);
+        --simPixelLine(0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0);
+        FValid <= '0';
+
+        -- check if frame is ignored when Enable /= '1' at start
+        Enable <= '0';
+        wait for clk_period;
+        FValid <= '1';
+        simPixelLine(1,1,2,2, 1,1,2,2);
+        Enable <= '1';
+        simPixelLine(1,2,3,4, 9,10,11,12);
+        simPixelLine(5,6,7,8, 13,14,15,16);
+        FValid <= '0';
+
+        wait for 2*clk_period;
+
+        FValid <= '1';
+        simPixelLine(1,2,3,4, 9,10,11,12);
         FValid <= '0';
 
         wait for 10 * clk_period;
