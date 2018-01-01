@@ -83,6 +83,9 @@ architecture top_level of cam_component is
      -- to slave
      signal ImageEndIrq     : std_logic;
 
+    --slave to interface
+    signal CameraIfEnable       : std_logic;
+
      -- Avalon Master
     signal iAddressMaster		: std_logic_vector(31 DOWNTO 0);
 	signal iBurstCountMaster	: std_logic_vector(3 DOWNTO 0);
@@ -126,7 +129,7 @@ begin
 			WriteData => WriteDataSlave,
 			Irq => IrqSlave,
 			ImageAddress => ImageAddress,
-			--CameraIfEnable => CameraIfEnable,
+			CameraIfEnable => CameraIfEnable,
 			--MasterEnable => MasterEnable,
 			Camera_nReset => GPIO_1_D5M_RESET_N,
 			--ImageStartIrq => ImageStartIrq,
@@ -153,6 +156,7 @@ begin
 		port map (
 				Clk => GPIO_1_D5M_PIXCLK,
 				nReset => nReset,
+				Enable => CameraIfEnable,
 				CamData => GPIO_1_D5M_D(11 downto 7),
 				LValid => GPIO_1_D5M_LVAL,
 				FValid => GPIO_1_D5M_FVAL,

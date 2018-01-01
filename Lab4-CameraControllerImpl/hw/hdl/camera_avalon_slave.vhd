@@ -17,7 +17,7 @@ Port(
     -- output signals
     Irq             : OUT std_logic;
     ImageAddress    : OUT std_logic_vector (31 DOWNTO 0);
-    --CameraIfEnable  : OUT std_logic;
+    CameraIfEnable  : OUT std_logic;
     Camera_nReset   : OUT std_logic;
 
     -- Input signals
@@ -36,6 +36,7 @@ begin
     pRegWr: process(Clk, nReset)
     begin
         ImageAddress <= iRegImageAddress;
+        CameraIfEnable <= iRegControl(0);
         Camera_nReset <= iRegControl(1);
         if nReset = '0' then
             -- Register reset values
