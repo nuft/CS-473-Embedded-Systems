@@ -22,7 +22,12 @@ Port(
     PixFIFOwreq     : OUT std_logic;
     PixFIFOData     : OUT std_logic_vector (15 DOWNTO 0);
     PixFIFOaclr     : OUT std_logic;
-    AddressUpdate   : OUT std_logic
+    AddressUpdate   : OUT std_logic;
+
+    -- debug signals
+    DEBUG_BayerState      : OUT std_logic_vector (1 DOWNTO 0);
+    DEBUG_PixelState      : OUT std_logic_vector (1 DOWNTO 0);
+    DEBUG_LineState       : OUT std_logic_vector (1 DOWNTO 0)
 );
 End camera_interface;
 
@@ -57,6 +62,29 @@ Architecture comp of camera_interface is
     signal GreenCache : std_logic_vector(4 DOWNTO 0);
 
 begin
+    pDebug: process(BayerState, PixelState, LineState)
+    begin
+        case BayerState is
+            when IDLE => DEBUG_BayerState <= "00";
+            when BLUE => DEBUG_BayerState <= "01";
+            when RED => DEBUG_BayerState <= "10";
+        end case;
+
+        case PixelState is
+            when IDLE => DEBUG_PixelState <= "00";
+            when PPROCESS => DEBUG_PixelState <= "01";
+            when POUTPUT => DEBUG_PixelState <= "10";
+            when PSKIP => DEBUG_PixelState <= "11";
+        end case;
+
+        case LineState is
+            when LBUFFER => DEBUG_LineState <= "00";
+            when LPROCESS => DEBUG_LineState <= "01";
+            when LSKIP1 => DEBUG_LineState <= "10";
+            when LSKIP2 => DEBUG_LineState <= "11";
+        end case;
+    end process;
+
     pBayerFSM: process(Clk, nReset)
     begin
         if nReset = '0' then

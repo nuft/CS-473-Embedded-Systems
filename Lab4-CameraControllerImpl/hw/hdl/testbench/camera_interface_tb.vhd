@@ -21,7 +21,10 @@ architecture tb of camera_interface_tb is
               PixFIFOwreq   : out std_logic;
               PixFIFOData   : out std_logic_vector (15 downto 0);
               PixFIFOaclr   : out std_logic;
-              AddressUpdate : out std_logic);
+              AddressUpdate : out std_logic;
+              DEBUG_BayerState : out std_logic_vector (1 DOWNTO 0);
+              DEBUG_PixelState : out std_logic_vector (1 DOWNTO 0);
+              DEBUG_LineState  : out std_logic_vector (1 DOWNTO 0));
     end component;
 
     signal Clk           : std_logic;
@@ -37,6 +40,9 @@ architecture tb of camera_interface_tb is
     signal PixFIFOData   : std_logic_vector (15 downto 0);
     signal PixFIFOaclr   : std_logic;
     signal AddressUpdate : std_logic;
+    signal DEBUG_BayerState : std_logic_vector (1 DOWNTO 0);
+    signal DEBUG_PixelState : std_logic_vector (1 DOWNTO 0);
+    signal DEBUG_LineState  : std_logic_vector (1 DOWNTO 0);
 
     constant clk_period : time := 20 ns;
     signal tb_clk : std_logic := '0';
@@ -57,7 +63,10 @@ begin
               PixFIFOwreq   => PixFIFOwreq,
               PixFIFOData   => PixFIFOData,
               PixFIFOaclr   => PixFIFOaclr,
-              AddressUpdate => AddressUpdate);
+              AddressUpdate => AddressUpdate,
+              DEBUG_BayerState  => DEBUG_BayerState,
+              DEBUG_PixelState  => DEBUG_PixelState,
+              DEBUG_LineState   => DEBUG_LineState);
 
     -- Clock generation
     tb_clk <= not tb_clk after clk_period/2 when sim_ended /= '1' else '0';
