@@ -49,6 +49,8 @@ entity cam_component is
 
     DEBUG_AddressUpdate     : OUT  std_logic;
 
+    DEBUG_offset            : OUT std_logic_vector(31 downto 0);
+
     DEBUG_WaitreqMaster     : OUT std_logic;
     DEBUG_AddressMaster     : OUT std_logic_vector(31 DOWNTO 0);
     DEBUG_BurstCountMaster  : OUT std_logic_vector(3 DOWNTO 0);
@@ -150,7 +152,8 @@ begin
             av_nreset => nReset,
             sv_image_address => ImageAddress,
             sv_address_update => AddressUpdate,
-            burst_ready => MasterIdle
+            burst_ready => MasterIdle,
+            DEBUG_offset => DEBUG_offset
         );
     CAMERA_INTERFACE: entity work.camera_interface
         port map (

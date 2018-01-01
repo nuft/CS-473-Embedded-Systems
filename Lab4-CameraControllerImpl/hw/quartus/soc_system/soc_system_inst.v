@@ -20,6 +20,9 @@
 		.cam_controller_debug_writedatamaster  (<connected-to-cam_controller_debug_writedatamaster>),  //                             .debug_writedatamaster
 		.cam_controller_debug_linefifodata     (<connected-to-cam_controller_debug_linefifodata>),     //                             .debug_linefifodata
 		.cam_controller_debug_pixfifodata      (<connected-to-cam_controller_debug_pixfifodata>),      //                             .debug_pixfifodata
+		.cam_controller_debug_linestate        (<connected-to-cam_controller_debug_linestate>),        //                             .debug_linestate
+		.cam_controller_debug_pixelstate       (<connected-to-cam_controller_debug_pixelstate>),       //                             .debug_pixelstate
+		.cam_controller_debug_offset           (<connected-to-cam_controller_debug_offset>),           //                             .debug_offset
 		.clk_clk                               (<connected-to-clk_clk>),                               //                          clk.clk
 		.hps_0_ddr_mem_a                       (<connected-to-hps_0_ddr_mem_a>),                       //                    hps_0_ddr.mem_a
 		.hps_0_ddr_mem_ba                      (<connected-to-hps_0_ddr_mem_ba>),                      //                             .mem_ba
@@ -89,6 +92,7 @@
 		.i2c_0_i2c_sda                         (<connected-to-i2c_0_i2c_sda>),                         //                             .sda
 		.pio_leds_external_connection_export   (<connected-to-pio_leds_external_connection_export>),   // pio_leds_external_connection.export
 		.pll_0_outclk0_clk                     (<connected-to-pll_0_outclk0_clk>),                     //                pll_0_outclk0.clk
-		.reset_reset_n                         (<connected-to-reset_reset_n>)                          //                        reset.reset_n
+		.reset_reset_n                         (<connected-to-reset_reset_n>),                         //                        reset.reset_n
+		.pll_0_locked_export                   (<connected-to-pll_0_locked_export>)                    //                 pll_0_locked.export
 	);
 

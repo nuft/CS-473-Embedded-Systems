@@ -31,7 +31,10 @@ entity master is
 		
 		sv_image_address: in std_logic_vector(31 downto 0);
 		sv_address_update: in std_logic;
-		burst_ready: out std_logic
+		burst_ready: out std_logic;
+
+		-- debug signals
+		DEBUG_offset: out std_logic_vector(31 downto 0)
 	);
 	end entity;
 	

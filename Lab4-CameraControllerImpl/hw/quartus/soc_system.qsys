@@ -278,6 +278,22 @@
          type = "String";
       }
    }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element soc_system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
@@ -313,6 +329,7 @@
    internal="pio_leds.external_connection"
    type="conduit"
    dir="end" />
+ <interface name="pll_0_locked" internal="pll_0.locked" type="conduit" dir="end" />
  <interface
    name="pll_0_outclk0"
    internal="pll_0.outclk0"
