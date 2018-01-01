@@ -143,6 +143,7 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
     signal INT_cam_controller_debug_linestate        : std_logic_vector(1 downto 0);                     -- debug_linestate
     signal INT_cam_controller_debug_pixelstate       : std_logic_vector(1 downto 0);                     -- debug_pixelstate
     signal INT_cam_controller_debug_offset           : std_logic_vector(31 downto 0);                    -- debug_offset
+    signal INT_cam_controller_debug_pixfifodataout   : std_logic_vector(15 downto 0);                    -- debug_pixfifodataout
 
     component soc_system is
         port (
@@ -239,6 +240,7 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
             cam_controller_debug_linestate        : out   std_logic_vector(1 downto 0);                     -- debug_linestate
             cam_controller_debug_pixelstate       : out   std_logic_vector(1 downto 0);                     -- debug_pixelstate
             cam_controller_debug_offset           : out   std_logic_vector(31 downto 0);                    -- debug_offset
+            cam_controller_debug_pixfifodataout   : out   std_logic_vector(15 downto 0);                    -- debug_pixfifodataout
             pll_0_outclk0_clk                   : out   std_logic                                         -- clk
         );
     end component soc_system;
@@ -342,6 +344,7 @@ begin
         cam_controller_debug_linestate        => INT_cam_controller_debug_linestate,        --                             .debug_linestate
         cam_controller_debug_pixelstate       => INT_cam_controller_debug_pixelstate,       --                             .debug_pixelstate
         cam_controller_debug_offset           => INT_cam_controller_debug_offset,           --                             .debug_offset
+        cam_controller_debug_pixfifodataout   => INT_cam_controller_debug_pixfifodataout,   --                             .debug_pixfifodataout
 
         --cam_controller_debug_addressupdate    => GPIO_0_LT24_D(0),    --                             .debug_addressupdate
         --cam_controller_debug_linefifoclear    => GPIO_0_LT24_D(1),    --                             .debug_linefifoclear
@@ -357,17 +360,18 @@ begin
         pll_0_outclk0_clk                   => GPIO_1_D5M_XCLKIN                    --                pll_0_outclk0.clk
     );
 
-    GPIO_0_LT24_D(0) <= GPIO_1_D5M_PIXCLK;
-    GPIO_0_LT24_D(1) <= INT_cam_controller_debug_linefifowreq;
-    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_linefiforr;
-    GPIO_0_LT24_D(3) <= INT_cam_controller_debug_pixfifowreq;
-    GPIO_0_LT24_D(5 DOWNTO 4) <= INT_cam_controller_debug_pixelstate;
-    GPIO_0_LT24_D(7 DOWNTO 6) <= INT_cam_controller_debug_linestate;
-    GPIO_0_LT24_D(9 DOWNTO 8) <= INT_cam_controller_debug_linefifodata(1 DOWNTO 0);
-    GPIO_0_LT24_D(15 DOWNTO 10) <= INT_cam_controller_debug_pixfifodata(5 DOWNTO 0);
-    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfiforreq;
-    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_linefifoclear;
-    GPIO_0_LT24_RS <= INT_cam_controller_debug_addressupdate;
+    ---- CamerInterface debug
+    --GPIO_0_LT24_D(0) <= GPIO_1_D5M_PIXCLK;
+    --GPIO_0_LT24_D(1) <= INT_cam_controller_debug_linefifowreq;
+    --GPIO_0_LT24_D(2) <= INT_cam_controller_debug_linefiforr;
+    --GPIO_0_LT24_D(3) <= INT_cam_controller_debug_pixfifowreq;
+    --GPIO_0_LT24_D(5 DOWNTO 4) <= INT_cam_controller_debug_pixelstate;
+    --GPIO_0_LT24_D(7 DOWNTO 6) <= INT_cam_controller_debug_linestate;
+    --GPIO_0_LT24_D(9 DOWNTO 8) <= INT_cam_controller_debug_linefifodata(1 DOWNTO 0);
+    --GPIO_0_LT24_D(15 DOWNTO 10) <= INT_cam_controller_debug_pixfifodata(5 DOWNTO 0);
+    --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfiforreq;
+    --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_linefifoclear;
+    --GPIO_0_LT24_RS <= INT_cam_controller_debug_addressupdate;
 
     -- -- AvalonMaster debug
     --GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
@@ -379,4 +383,16 @@ begin
     --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_offset(11);
     --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_offset(12);
     --GPIO_0_LT24_RS <= INT_cam_controller_debug_offset(13);
+
+     -- AvalonMaster debug data path
+    GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
+    GPIO_0_LT24_D(1) <= INT_cam_controller_debug_pixfiforreq;
+    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_writemaster;
+    GPIO_0_LT24_D(3) <= INT_cam_controller_debug_waitreqmaster;
+    GPIO_0_LT24_D(7 DOWNTO 4) <= INT_cam_controller_debug_pixfifodataout(3 DOWNTO 0);
+    GPIO_0_LT24_D(11 DOWNTO 8) <= INT_cam_controller_debug_writedatamaster(3 DOWNTO 0);
+    GPIO_0_LT24_D(15 DOWNTO 12) <= INT_cam_controller_debug_offset(7 DOWNTO 4);
+    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfifoaclr;
+    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_burstcountmaster(0);
+    GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
 end;

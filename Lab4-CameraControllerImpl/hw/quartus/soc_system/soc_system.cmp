@@ -24,6 +24,7 @@
 			cam_controller_debug_linestate        : out   std_logic_vector(1 downto 0);                     -- debug_linestate
 			cam_controller_debug_pixelstate       : out   std_logic_vector(1 downto 0);                     -- debug_pixelstate
 			cam_controller_debug_offset           : out   std_logic_vector(31 downto 0);                    -- debug_offset
+			cam_controller_debug_pixfifodataout   : out   std_logic_vector(15 downto 0);                    -- debug_pixfifodataout
 			clk_clk                               : in    std_logic                     := 'X';             -- clk
 			hps_0_ddr_mem_a                       : out   std_logic_vector(14 downto 0);                    -- mem_a
 			hps_0_ddr_mem_ba                      : out   std_logic_vector(2 downto 0);                     -- mem_ba
@@ -92,9 +93,9 @@
 			i2c_0_i2c_scl                         : inout std_logic                     := 'X';             -- scl
 			i2c_0_i2c_sda                         : inout std_logic                     := 'X';             -- sda
 			pio_leds_external_connection_export   : out   std_logic_vector(7 downto 0);                     -- export
+			pll_0_locked_export                   : out   std_logic;                                        -- export
 			pll_0_outclk0_clk                     : out   std_logic;                                        -- clk
-			reset_reset_n                         : in    std_logic                     := 'X';             -- reset_n
-			pll_0_locked_export                   : out   std_logic                                         -- export
+			reset_reset_n                         : in    std_logic                     := 'X'              -- reset_n
 		);
 	end component soc_system;
 

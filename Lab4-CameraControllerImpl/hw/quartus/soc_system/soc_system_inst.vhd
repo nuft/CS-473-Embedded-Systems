@@ -24,6 +24,7 @@
 			cam_controller_debug_linestate        : out   std_logic_vector(1 downto 0);                     -- debug_linestate
 			cam_controller_debug_pixelstate       : out   std_logic_vector(1 downto 0);                     -- debug_pixelstate
 			cam_controller_debug_offset           : out   std_logic_vector(31 downto 0);                    -- debug_offset
+			cam_controller_debug_pixfifodataout   : out   std_logic_vector(15 downto 0);                    -- debug_pixfifodataout
 			clk_clk                               : in    std_logic                     := 'X';             -- clk
 			hps_0_ddr_mem_a                       : out   std_logic_vector(14 downto 0);                    -- mem_a
 			hps_0_ddr_mem_ba                      : out   std_logic_vector(2 downto 0);                     -- mem_ba
@@ -92,9 +93,9 @@
 			i2c_0_i2c_scl                         : inout std_logic                     := 'X';             -- scl
 			i2c_0_i2c_sda                         : inout std_logic                     := 'X';             -- sda
 			pio_leds_external_connection_export   : out   std_logic_vector(7 downto 0);                     -- export
+			pll_0_locked_export                   : out   std_logic;                                        -- export
 			pll_0_outclk0_clk                     : out   std_logic;                                        -- clk
-			reset_reset_n                         : in    std_logic                     := 'X';             -- reset_n
-			pll_0_locked_export                   : out   std_logic                                         -- export
+			reset_reset_n                         : in    std_logic                     := 'X'              -- reset_n
 		);
 	end component soc_system;
 
@@ -124,6 +125,7 @@
 			cam_controller_debug_linestate        => CONNECTED_TO_cam_controller_debug_linestate,        --                             .debug_linestate
 			cam_controller_debug_pixelstate       => CONNECTED_TO_cam_controller_debug_pixelstate,       --                             .debug_pixelstate
 			cam_controller_debug_offset           => CONNECTED_TO_cam_controller_debug_offset,           --                             .debug_offset
+			cam_controller_debug_pixfifodataout   => CONNECTED_TO_cam_controller_debug_pixfifodataout,   --                             .debug_pixfifodataout
 			clk_clk                               => CONNECTED_TO_clk_clk,                               --                          clk.clk
 			hps_0_ddr_mem_a                       => CONNECTED_TO_hps_0_ddr_mem_a,                       --                    hps_0_ddr.mem_a
 			hps_0_ddr_mem_ba                      => CONNECTED_TO_hps_0_ddr_mem_ba,                      --                             .mem_ba
@@ -192,8 +194,8 @@
 			i2c_0_i2c_scl                         => CONNECTED_TO_i2c_0_i2c_scl,                         --                    i2c_0_i2c.scl
 			i2c_0_i2c_sda                         => CONNECTED_TO_i2c_0_i2c_sda,                         --                             .sda
 			pio_leds_external_connection_export   => CONNECTED_TO_pio_leds_external_connection_export,   -- pio_leds_external_connection.export
+			pll_0_locked_export                   => CONNECTED_TO_pll_0_locked_export,                   --                 pll_0_locked.export
 			pll_0_outclk0_clk                     => CONNECTED_TO_pll_0_outclk0_clk,                     --                pll_0_outclk0.clk
-			reset_reset_n                         => CONNECTED_TO_reset_reset_n,                         --                        reset.reset_n
-			pll_0_locked_export                   => CONNECTED_TO_pll_0_locked_export                    --                 pll_0_locked.export
+			reset_reset_n                         => CONNECTED_TO_reset_reset_n                          --                        reset.reset_n
 		);
 

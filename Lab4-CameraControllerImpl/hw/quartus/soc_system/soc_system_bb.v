@@ -24,6 +24,7 @@ module soc_system (
 	cam_controller_debug_linestate,
 	cam_controller_debug_pixelstate,
 	cam_controller_debug_offset,
+	cam_controller_debug_pixfifodataout,
 	clk_clk,
 	hps_0_ddr_mem_a,
 	hps_0_ddr_mem_ba,
@@ -92,9 +93,9 @@ module soc_system (
 	i2c_0_i2c_scl,
 	i2c_0_i2c_sda,
 	pio_leds_external_connection_export,
+	pll_0_locked_export,
 	pll_0_outclk0_clk,
-	reset_reset_n,
-	pll_0_locked_export);	
+	reset_reset_n);	
 
 	input	[11:0]	cam_controller_d5m_d;
 	input		cam_controller_d5m_fval;
@@ -120,6 +121,7 @@ module soc_system (
 	output	[1:0]	cam_controller_debug_linestate;
 	output	[1:0]	cam_controller_debug_pixelstate;
 	output	[31:0]	cam_controller_debug_offset;
+	output	[15:0]	cam_controller_debug_pixfifodataout;
 	input		clk_clk;
 	output	[14:0]	hps_0_ddr_mem_a;
 	output	[2:0]	hps_0_ddr_mem_ba;
@@ -188,7 +190,7 @@ module soc_system (
 	inout		i2c_0_i2c_scl;
 	inout		i2c_0_i2c_sda;
 	output	[7:0]	pio_leds_external_connection_export;
+	output		pll_0_locked_export;
 	output		pll_0_outclk0_clk;
 	input		reset_reset_n;
-	output		pll_0_locked_export;
 endmodule

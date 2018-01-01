@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="soc_system" kind="soc_system" version="1.0" fabric="QSYS">
  <!-- Format version 16.0 211 (Future versions may contain additional information.) -->
- <!-- 2018.01.01.13:25:00 -->
+ <!-- 2018.01.02.01:33:38 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1514809499</value>
+  <value>1514853217</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -2138,6 +2138,30 @@ parameters are a RESULT of the module parameters. -->
     <direction>Output</direction>
     <width>16</width>
     <role>debug_pixfifodata</role>
+   </port>
+   <port>
+    <name>DEBUG_LineState</name>
+    <direction>Output</direction>
+    <width>2</width>
+    <role>debug_linestate</role>
+   </port>
+   <port>
+    <name>DEBUG_PixelState</name>
+    <direction>Output</direction>
+    <width>2</width>
+    <role>debug_pixelstate</role>
+   </port>
+   <port>
+    <name>DEBUG_offset</name>
+    <direction>Output</direction>
+    <width>32</width>
+    <role>debug_offset</role>
+   </port>
+   <port>
+    <name>DEBUG_PixFIFODataOut</name>
+    <direction>Output</direction>
+    <width>16</width>
+    <role>debug_pixfifodataout</role>
    </port>
   </interface>
  </module>
