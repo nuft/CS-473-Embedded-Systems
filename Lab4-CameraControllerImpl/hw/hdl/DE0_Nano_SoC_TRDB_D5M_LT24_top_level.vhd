@@ -148,6 +148,17 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
     signal DEBUG_addr_msb_is_not_zero: std_logic;
     signal DEBUG_offset_msb_is_not_zero: std_logic;
 
+    signal INT_sdram_bridge_0_conduit_end_debug_address       : std_logic_vector(27 downto 0);                    -- debug_address
+    signal INT_sdram_bridge_0_conduit_end_debug_burstcount    : std_logic_vector(6 downto 0);                     -- debug_burstcount
+    signal INT_sdram_bridge_0_conduit_end_debug_byteenable    : std_logic_vector(3 downto 0);                     -- debug_byteenable
+    signal INT_sdram_bridge_0_conduit_end_debug_read          : std_logic;                                        -- debug_read
+    signal INT_sdram_bridge_0_conduit_end_debug_readdata      : std_logic_vector(31 downto 0);                    -- debug_readdata
+    signal INT_sdram_bridge_0_conduit_end_debug_readdatavalid : std_logic;                                        -- debug_readdatavalid
+    signal INT_sdram_bridge_0_conduit_end_debug_waitrequest   : std_logic;                                        -- debug_waitrequest
+    signal INT_sdram_bridge_0_conduit_end_debug_write         : std_logic;                                        -- debug_write
+    signal INT_sdram_bridge_0_conduit_end_debug_writedata     : std_logic_vector(31 downto 0);                     -- debug_writedata
+
+
     component soc_system is
         port (
             clk_clk                             : in    std_logic                     := 'X';
@@ -244,6 +255,15 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
             cam_controller_debug_pixelstate       : out   std_logic_vector(1 downto 0);                     -- debug_pixelstate
             cam_controller_debug_offset           : out   std_logic_vector(31 downto 0);                    -- debug_offset
             cam_controller_debug_pixfifodataout   : out   std_logic_vector(15 downto 0);                    -- debug_pixfifodataout
+            sdram_bridge_0_conduit_end_debug_address       : out   std_logic_vector(27 downto 0);                    -- debug_address
+            sdram_bridge_0_conduit_end_debug_burstcount    : out   std_logic_vector(6 downto 0);                     -- debug_burstcount
+            sdram_bridge_0_conduit_end_debug_byteenable    : out   std_logic_vector(3 downto 0);                     -- debug_byteenable
+            sdram_bridge_0_conduit_end_debug_read          : out   std_logic;                                        -- debug_read
+            sdram_bridge_0_conduit_end_debug_readdata      : out   std_logic_vector(31 downto 0);                    -- debug_readdata
+            sdram_bridge_0_conduit_end_debug_readdatavalid : out   std_logic;                                        -- debug_readdatavalid
+            sdram_bridge_0_conduit_end_debug_waitrequest   : out   std_logic;                                        -- debug_waitrequest
+            sdram_bridge_0_conduit_end_debug_write         : out   std_logic;                                        -- debug_write
+            sdram_bridge_0_conduit_end_debug_writedata     : out   std_logic_vector(31 downto 0);                     -- debug_writedata
             pll_0_outclk0_clk                   : out   std_logic                                         -- clk
         );
     end component soc_system;
@@ -360,6 +380,17 @@ begin
         --cam_controller_debug_writemaster      => GPIO_0_LT24_RS,      --                             .debug_writemaster
         --cam_controller_debug_burstcountmaster => GPIO_0_LT24_D(9 downto 6), --                             .debug_burstcountmaster
         --cam_controller_debug_byteenablemaster => GPIO_0_LT24_D(13 downto 10), --                             .debug_byteenablemaster
+
+        sdram_bridge_0_conduit_end_debug_address       => INT_sdram_bridge_0_conduit_end_debug_address,       --   sdram_bridge_0_conduit_end.debug_address
+        sdram_bridge_0_conduit_end_debug_burstcount    => INT_sdram_bridge_0_conduit_end_debug_burstcount,    --                             .debug_burstcount
+        sdram_bridge_0_conduit_end_debug_byteenable    => INT_sdram_bridge_0_conduit_end_debug_byteenable,    --                             .debug_byteenable
+        sdram_bridge_0_conduit_end_debug_read          => INT_sdram_bridge_0_conduit_end_debug_read,          --                             .debug_read
+        sdram_bridge_0_conduit_end_debug_readdata      => INT_sdram_bridge_0_conduit_end_debug_readdata,      --                             .debug_readdata
+        sdram_bridge_0_conduit_end_debug_readdatavalid => INT_sdram_bridge_0_conduit_end_debug_readdatavalid, --                             .debug_readdatavalid
+        sdram_bridge_0_conduit_end_debug_waitrequest   => INT_sdram_bridge_0_conduit_end_debug_waitrequest,   --                             .debug_waitrequest
+        sdram_bridge_0_conduit_end_debug_write         => INT_sdram_bridge_0_conduit_end_debug_write,         --                             .debug_write
+        sdram_bridge_0_conduit_end_debug_writedata     => INT_sdram_bridge_0_conduit_end_debug_writedata,      --                             .debug_writedata
+
         pll_0_outclk0_clk                   => GPIO_1_D5M_XCLKIN                    --                pll_0_outclk0.clk
     );
 
@@ -379,15 +410,15 @@ begin
     DEBUG_addr_msb_is_not_zero <= '0' when INT_cam_controller_debug_addressmaster(31 DOWNTO 15) = std_logic_vector(to_unsigned(0,17)) else '1';
     DEBUG_offset_msb_is_not_zero <= '0' when INT_cam_controller_debug_offset(31 DOWNTO 15) = std_logic_vector(to_unsigned(0,17)) else '1';
 
-     -- AvalonMaster debug
-    GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
-    GPIO_0_LT24_D(1) <= INT_cam_controller_debug_writemaster;
-    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_waitreqmaster;
-    GPIO_0_LT24_D(3) <= DEBUG_addr_msb_is_not_zero;
-    GPIO_0_LT24_D(15 DOWNTO 4) <= INT_cam_controller_debug_addressmaster(14 DOWNTO 3);
-    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_writedatamaster(0);
-    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_byteenablemaster(0);
-    GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
+    -- -- AvalonMaster debug
+    --GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
+    --GPIO_0_LT24_D(1) <= INT_cam_controller_debug_writemaster;
+    --GPIO_0_LT24_D(2) <= INT_cam_controller_debug_waitreqmaster;
+    --GPIO_0_LT24_D(3) <= DEBUG_addr_msb_is_not_zero;
+    --GPIO_0_LT24_D(15 DOWNTO 4) <= INT_cam_controller_debug_addressmaster(14 DOWNTO 3);
+    --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_writedatamaster(0);
+    --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_byteenablemaster(0);
+    --GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
 
     -- -- AvalonMaster debug data path
     --GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
@@ -400,4 +431,21 @@ begin
     --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfifoaclr;
     --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_burstcountmaster(0);
     --GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
+
+    -- AvalonMaster debug
+    GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
+    GPIO_0_LT24_D(1) <= INT_sdram_bridge_0_conduit_end_debug_write;
+    GPIO_0_LT24_D(2) <= INT_sdram_bridge_0_conduit_end_debug_waitrequest;
+    GPIO_0_LT24_D(15 DOWNTO 3) <= INT_sdram_bridge_0_conduit_end_debug_address(12 DOWNTO 0);
+    GPIO_0_LT24_RD_N <= INT_sdram_bridge_0_conduit_end_debug_writedata(0);
+    GPIO_0_LT24_WR_N <= INT_sdram_bridge_0_conduit_end_debug_byteenable(0);
+    GPIO_0_LT24_RS <= INT_sdram_bridge_0_conduit_end_debug_burstcount(3);
+
+    GPIO_0_LT24_ADC_CS_N <= INT_sdram_bridge_0_conduit_end_debug_writedata(1);
+    GPIO_0_LT24_ADC_DCLK <= INT_sdram_bridge_0_conduit_end_debug_writedata(2);
+    GPIO_0_LT24_ADC_DIN <= INT_cam_controller_debug_addressmaster(5);
+    GPIO_0_LT24_CS_N <= INT_cam_controller_debug_waitreqmaster;
+    GPIO_0_LT24_LCD_ON <= INT_cam_controller_debug_writemaster;
+    GPIO_0_LT24_RESET_N <= INT_sdram_bridge_0_conduit_end_debug_read;
+
 end;

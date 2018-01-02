@@ -95,7 +95,16 @@ module soc_system (
 	pio_leds_external_connection_export,
 	pll_0_locked_export,
 	pll_0_outclk0_clk,
-	reset_reset_n);	
+	reset_reset_n,
+	sdram_bridge_0_conduit_end_debug_address,
+	sdram_bridge_0_conduit_end_debug_burstcount,
+	sdram_bridge_0_conduit_end_debug_byteenable,
+	sdram_bridge_0_conduit_end_debug_read,
+	sdram_bridge_0_conduit_end_debug_readdata,
+	sdram_bridge_0_conduit_end_debug_readdatavalid,
+	sdram_bridge_0_conduit_end_debug_waitrequest,
+	sdram_bridge_0_conduit_end_debug_write,
+	sdram_bridge_0_conduit_end_debug_writedata);	
 
 	input	[11:0]	cam_controller_d5m_d;
 	input		cam_controller_d5m_fval;
@@ -193,4 +202,13 @@ module soc_system (
 	output		pll_0_locked_export;
 	output		pll_0_outclk0_clk;
 	input		reset_reset_n;
+	output	[27:0]	sdram_bridge_0_conduit_end_debug_address;
+	output	[6:0]	sdram_bridge_0_conduit_end_debug_burstcount;
+	output	[3:0]	sdram_bridge_0_conduit_end_debug_byteenable;
+	output		sdram_bridge_0_conduit_end_debug_read;
+	output	[31:0]	sdram_bridge_0_conduit_end_debug_readdata;
+	output		sdram_bridge_0_conduit_end_debug_readdatavalid;
+	output		sdram_bridge_0_conduit_end_debug_waitrequest;
+	output		sdram_bridge_0_conduit_end_debug_write;
+	output	[31:0]	sdram_bridge_0_conduit_end_debug_writedata;
 endmodule
