@@ -54,7 +54,7 @@ architecture rtl of master is
 	signal burst_finish, store_finish: boolean:= false;
 begin
 	DEBUG_offset <= offset_reg;
-
+   
 	--slave inputs
 	
 	--state register
@@ -89,6 +89,7 @@ begin
 	begin
 		addr_next <= addr_reg;
 		offset_next <= offset_reg;
+		 av_address <= std_logic_vector(unsigned(addr_reg) + unsigned(offset_reg));
 		if sv_address_update = '1' then
 			addr_next <= sv_image_address;
 			offset_next <= (others => '0');
@@ -129,7 +130,6 @@ begin
 	begin
 		burst_next <= (others => '0');
 		store_next <= (others => '1');
-		av_address <= (others => '0');
 		av_burst_count <= (others => '0');
 		av_write <= '0';
 		av_byte_enable <= (others => '0');
@@ -156,8 +156,7 @@ begin
 					  if (store_reg(0) = '1' and store_reg < 16) then
 					  	data_out_next(to_integer((store_cnt-1)/2)) <= data2_reg & data_reg;
 					  end if;
-		when WRITE => av_address <= std_logic_vector(unsigned(addr_reg) + unsigned(offset_reg));
-					  av_burst_count <= std_logic_vector(to_unsigned(BURST_CNT_MAX, av_burst_count'length));
+		when WRITE => av_burst_count <= std_logic_vector(to_unsigned(BURST_CNT_MAX, av_burst_count'length));
 					  av_write <= '1';
 					--  if burst_reg < 8 then
 					  	av_byte_enable <= (others => '1');

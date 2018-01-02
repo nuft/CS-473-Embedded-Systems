@@ -384,7 +384,7 @@ begin
     GPIO_0_LT24_D(1) <= INT_cam_controller_debug_writemaster;
     GPIO_0_LT24_D(2) <= INT_cam_controller_debug_waitreqmaster;
     GPIO_0_LT24_D(3) <= DEBUG_addr_msb_is_not_zero;
-    GPIO_0_LT24_D(15 DOWNTO 4) <= INT_cam_controller_debug_addressmaster(14 DOWNTO 3);
+    GPIO_0_LT24_D(15 DOWNTO 4) <= INT_cam_controller_debug_addressmaster(11 DOWNTO 0);
     GPIO_0_LT24_RD_N <= INT_cam_controller_debug_writedatamaster(0);
     GPIO_0_LT24_WR_N <= INT_cam_controller_debug_byteenablemaster(0);
     GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
