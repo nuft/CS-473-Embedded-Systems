@@ -373,26 +373,24 @@ begin
     --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_linefifoclear;
     --GPIO_0_LT24_RS <= INT_cam_controller_debug_addressupdate;
 
-    -- -- AvalonMaster debug
+     -- AvalonMaster debug
+    GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
+    GPIO_0_LT24_D(1) <= INT_cam_controller_debug_writemaster;
+    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_waitreqmaster;
+    GPIO_0_LT24_D(15 DOWNTO 3) <= INT_cam_controller_debug_addressmaster(14 DOWNTO 2);
+    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_writedatamaster(0);
+    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_byteenablemaster(0);
+    GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
+
+    -- -- AvalonMaster debug data path
     --GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
     --GPIO_0_LT24_D(1) <= INT_cam_controller_debug_pixfiforreq;
-    --GPIO_0_LT24_D(2) <= INT_cam_controller_debug_burstcountmaster(3);
-    --GPIO_0_LT24_D(3) <= INT_cam_controller_debug_writemaster;
-    --GPIO_0_LT24_D(4) <= INT_cam_controller_debug_waitreqmaster;
-    --GPIO_0_LT24_D(15 DOWNTO 5) <= INT_cam_controller_debug_offset(10 DOWNTO 0);
-    --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_offset(11);
-    --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_offset(12);
-    --GPIO_0_LT24_RS <= INT_cam_controller_debug_offset(13);
-
-     -- AvalonMaster debug data path
-    GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
-    GPIO_0_LT24_D(1) <= INT_cam_controller_debug_pixfiforreq;
-    GPIO_0_LT24_D(2) <= INT_cam_controller_debug_writemaster;
-    GPIO_0_LT24_D(3) <= INT_cam_controller_debug_waitreqmaster;
-    GPIO_0_LT24_D(7 DOWNTO 4) <= INT_cam_controller_debug_pixfifodataout(3 DOWNTO 0);
-    GPIO_0_LT24_D(11 DOWNTO 8) <= INT_cam_controller_debug_writedatamaster(3 DOWNTO 0);
-    GPIO_0_LT24_D(15 DOWNTO 12) <= INT_cam_controller_debug_offset(7 DOWNTO 4);
-    GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfifoaclr;
-    GPIO_0_LT24_WR_N <= INT_cam_controller_debug_burstcountmaster(0);
-    GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
+    --GPIO_0_LT24_D(2) <= INT_cam_controller_debug_writemaster;
+    --GPIO_0_LT24_D(3) <= INT_cam_controller_debug_waitreqmaster;
+    --GPIO_0_LT24_D(7 DOWNTO 4) <= INT_cam_controller_debug_pixfifodataout(3 DOWNTO 0);
+    --GPIO_0_LT24_D(11 DOWNTO 8) <= INT_cam_controller_debug_writedatamaster(3 DOWNTO 0);
+    --GPIO_0_LT24_D(15 DOWNTO 12) <= INT_cam_controller_debug_offset(7 DOWNTO 4);
+    --GPIO_0_LT24_RD_N <= INT_cam_controller_debug_pixfifoaclr;
+    --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_burstcountmaster(0);
+    --GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);
 end;
