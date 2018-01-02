@@ -16,6 +16,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
     port(
@@ -144,6 +145,8 @@ architecture rtl of DE0_Nano_SoC_TRDB_D5M_LT24_top_level is
     signal INT_cam_controller_debug_pixelstate       : std_logic_vector(1 downto 0);                     -- debug_pixelstate
     signal INT_cam_controller_debug_offset           : std_logic_vector(31 downto 0);                    -- debug_offset
     signal INT_cam_controller_debug_pixfifodataout   : std_logic_vector(15 downto 0);                    -- debug_pixfifodataout
+    signal DEBUG_addr_msb_is_not_zero: std_logic;
+    signal DEBUG_offset_msb_is_not_zero: std_logic;
 
     component soc_system is
         port (
@@ -373,11 +376,15 @@ begin
     --GPIO_0_LT24_WR_N <= INT_cam_controller_debug_linefifoclear;
     --GPIO_0_LT24_RS <= INT_cam_controller_debug_addressupdate;
 
+    DEBUG_addr_msb_is_not_zero <= '0' when INT_cam_controller_debug_addressmaster(31 DOWNTO 15) = std_logic_vector(to_unsigned(0,17)) else '1';
+    DEBUG_offset_msb_is_not_zero <= '0' when INT_cam_controller_debug_offset(31 DOWNTO 15) = std_logic_vector(to_unsigned(0,17)) else '1';
+
      -- AvalonMaster debug
     GPIO_0_LT24_D(0) <= FPGA_CLK1_50;
     GPIO_0_LT24_D(1) <= INT_cam_controller_debug_writemaster;
     GPIO_0_LT24_D(2) <= INT_cam_controller_debug_waitreqmaster;
-    GPIO_0_LT24_D(15 DOWNTO 3) <= INT_cam_controller_debug_addressmaster(14 DOWNTO 2);
+    GPIO_0_LT24_D(3) <= DEBUG_addr_msb_is_not_zero;
+    GPIO_0_LT24_D(15 DOWNTO 4) <= INT_cam_controller_debug_addressmaster(14 DOWNTO 3);
     GPIO_0_LT24_RD_N <= INT_cam_controller_debug_writedatamaster(0);
     GPIO_0_LT24_WR_N <= INT_cam_controller_debug_byteenablemaster(0);
     GPIO_0_LT24_RS <= INT_cam_controller_debug_burstcountmaster(3);

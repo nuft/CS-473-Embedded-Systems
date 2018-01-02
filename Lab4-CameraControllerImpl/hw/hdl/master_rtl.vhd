@@ -1,7 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use ieee.math_real.all;
 
 entity master is
 	port(
@@ -54,7 +53,8 @@ architecture rtl of master is
 	signal store_cnt, store_reg, store_next: unsigned(15 downto 0);
 	signal burst_finish, store_finish: boolean:= false;
 begin
-	
+	DEBUG_offset <= offset_reg;
+
 	--slave inputs
 	
 	--state register
