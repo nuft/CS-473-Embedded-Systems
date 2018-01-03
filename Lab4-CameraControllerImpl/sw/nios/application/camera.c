@@ -7,12 +7,15 @@
 #include <sys/alt_irq.h>
 #include <io.h>
 #include "i2c/i2c.h"
+#include "camera.h"
 
 /* Settings */
-#define CONFIG_TEST_PATTERN    0
-#define CONFIG_MIRROR_ROW      0
-#define CONFIG_MIRROR_COL      0
-#define CONFIG_PIXCLK_DIV      0 // 0,1,2,4,8,16,32,64 half of effective divider
+#define CONFIG_TEST_PATTERN         1
+#define CONFIG_TEST_PATTERN_TYPE    TEST_PATTERN_MONOCHROME_VERTICAL_BARS
+#define CONFIG_BINNING              1
+#define CONFIG_MIRROR_ROW           0
+#define CONFIG_MIRROR_COL           0
+#define CONFIG_PIXCLK_DIV           0 // 0,1,2,4,8,16,32,64 half of effective divider
 
 /* Camera Controller peripheral defines */
 #define CAM_BASE CAM_CONTROLLER_0_BASE
@@ -83,6 +86,19 @@
 /* REG_PIXEL_CLOCK_CONTROL */
 #define INVERT_PIXCLK_MASK  (1<<15)
 #define DIVIDE_PIXCLK_POS   0
+/* REG_TEST_PATTERN_CONTROL */
+#define TEST_PATTERN_COLOR_FIELD 0
+#define TEST_PATTERN_HORIZONTAL_GRADIENT 1
+#define TEST_PATTERN_VERTICAL_GRADIENT 2
+#define TEST_PATTERN_DIAGONAL 3
+#define TEST_PATTERN_CLASSIC 4
+#define TEST_PATTERN_MARCHING_1S 5
+#define TEST_PATTERN_MONOCHROME_HORIZONTAL_BARS 6
+#define TEST_PATTERN_MONOCHROME_VERTICAL_BARS 7
+#define TEST_PATTERN_VERTICAL_COLOR_BARS 8
+
+#define TEST_PATTERN_CONTROL_POS 3
+#define ENABLE_TEST_PATTERN_MASK (1<<0)
 
 
 static i2c_dev *_i2c;
@@ -118,12 +134,46 @@ static uint16_t read_reg(uint8_t register_offset)
 
 void camera_enable(void)
 {
-    IOWR_32DIRECT(CAM_BASE, CAM_CR, CAM_CR_CAM_EN_MASK | CAM_CR_CON_EN_MASK);
+    uint32_t cam_cr = IORD_32DIRECT(CAM_BASE, CAM_CR);
+    IOWR_32DIRECT(CAM_BASE, CAM_CR, cam_cr | CAM_CR_CAM_EN_MASK);
 }
 
+/* resets the Camera
+ * @note camera_setup() needs to be called again after reenabling the camera.
+ */
 void camera_disable(void)
 {
     IOWR_32DIRECT(CAM_BASE, CAM_CR, 0);
+}
+
+void camera_enable_receive(void)
+{
+    uint32_t cam_cr = IORD_32DIRECT(CAM_BASE, CAM_CR);
+    IOWR_32DIRECT(CAM_BASE, CAM_CR, cam_cr | CAM_CR_CON_EN_MASK);
+}
+
+
+/* @note returns last CAM_CR value to allow to restore the previous value. */
+static uint32_t _camera_disable_receive(void)
+{
+    uint32_t cam_cr = IORD_32DIRECT(CAM_BASE, CAM_CR);
+    IOWR_32DIRECT(CAM_BASE, CAM_CR, cam_cr & ~CAM_CR_CON_EN_MASK);
+    return cam_cr;
+}
+
+void camera_disable_receive(void)
+{
+    _camera_disable_receive();
+}
+
+void camera_enable_interrupt(void)
+{
+    IOWR_32DIRECT(CAM_BASE, CAM_IMR, CAM_IMR_IRQ_MASK);
+}
+
+void camera_disable_interrupt(void)
+{
+    IOWR_32DIRECT(CAM_BASE, CAM_IMR, 0);
 }
 
 // #define CAM_IC_ID CAM_CONTROLLER_0_IRQ_INTERRUPT_CONTROLLER_ID
@@ -134,24 +184,28 @@ void camera_disable(void)
 /* Setup the camera
  * @note isr can be NULL to disable the interrupt
  */
-void camera_setup(i2c_dev *i2c, void *buf, void (*isr)(void *), void *isr_arg)
+void camera_setup(i2c_dev *i2c, uint16_t *buf, void (*isr)(void *), void *isr_arg)
 {
     uint16_t reg;
-
     _i2c = i2c;
 
+
+    uint32_t cam_cr = _camera_disable_receive();
+
+    camera_clear_irq_flag();
     if (isr != NULL) {
         // ic_id = <MY_IP>_IRQ_INTERRUPT_CONTROLLER_ID
         // irq = <MY_IP>_IRQ
-    	alt_ic_isr_register(CAM_IC_ID, CAM_IRQ, isr, isr_arg, NULL);
-    	alt_ic_irq_enable(CAM_IC_ID, CAM_IRQ);
-        // Enable interrupt
-        IOWR_32DIRECT(CAM_BASE, CAM_IMR, CAM_IMR_IRQ_MASK);
+        alt_ic_isr_register(CAM_IC_ID, CAM_IRQ, isr, isr_arg, NULL);
+        alt_ic_irq_enable(CAM_IC_ID, CAM_IRQ);
+
+        camera_enable_interrupt();
     } else {
-        // Disable interrupt
-        IOWR_32DIRECT(CAM_BASE, CAM_IMR, 0);
+        camera_disable_interrupt();
     }
-    camera_set_frame_buffer(buf);
+
+#if CONFIG_BINNING
+    // See "Table 1.7 Standard Resolutions" in THDB-D5 Hardware Specification.
 
     // ROW_SIZE = 1919 (R0x03)
     write_reg(REG_ROW_SIZE, 1919);
@@ -166,10 +220,28 @@ void camera_setup(i2c_dev *i2c, void *buf, void (*isr)(void *), void *isr_arg)
     // COLUMN_BIN = 3 (R0x23 [5:4])
     // COLUMN_SKIP = 3 (R0x23 [2:0])
     write_reg(REG_COLUMN_ADDRESS_MODE, (3<<COL_BIN_POS) | (3<<COL_SKIP_POS));
+#else
+    // ROW_SIZE = 479 (R0x03)
+    write_reg(REG_ROW_SIZE, 479);
+    // COLUMN_SIZE = 640 (R0x04)
+    write_reg(REG_COLUMN_SIZE, 640);
+    // SHUTTER_WIDTH_LOWER < 479 (R0x09)
+    write_reg(REG_SHUTTER_WIDTH_LOWER, 3);
+    write_reg(REG_SHUTTER_WIDTH_UPPER, 0);
+    // ROW_BIN = 0 (R0x22 [5:4])
+    // ROW_SKIP = 0 (R0x22 [2:0])
+    write_reg(REG_ROW_ADDRESS_MODE, (0<<ROW_BIN_POS) | (0<<ROW_SKIP_POS));
+    // COLUMN_BIN = 0 (R0x23 [5:4])
+    // COLUMN_SKIP = 0 (R0x23 [2:0])
+    write_reg(REG_COLUMN_ADDRESS_MODE, (0<<COL_BIN_POS) | (0<<COL_SKIP_POS));
+#endif
 
     // clear the bit Snapshot in register Read Mode 1 (bit 8 in R0x1E)
     reg = read_reg(REG_READ_MODE_1);
     write_reg(REG_READ_MODE_1, reg & ~SNAPSHOT_MASK);
+
+    // decrease frame rate
+    write_reg(REG_VERTICAL_BLANK, 500);
 
     // mirror image
     reg = read_reg(REG_READ_MODE_2);
@@ -185,14 +257,23 @@ void camera_setup(i2c_dev *i2c, void *buf, void (*isr)(void *), void *isr_arg)
     // invert clock
     write_reg(REG_PIXEL_CLOCK_CONTROL, INVERT_PIXCLK_MASK | (CONFIG_PIXCLK_DIV<<DIVIDE_PIXCLK_POS));
 
-#if TEST_PATTERN
+#if CONFIG_TEST_PATTERN
     // Test_Pattern_Mode
-    // TODO
+    write_reg(REG_TEST_PATTERN_CONTROL, ENABLE_TEST_PATTERN_MASK | (CONFIG_TEST_PATTERN_TYPE<<TEST_PATTERN_CONTROL_POS));
+    write_reg(REG_TEST_PATTERN_RED, 0x080);
+    write_reg(REG_TEST_PATTERN_GREEN, 0xfff);
+    write_reg(REG_TEST_PATTERN_BLUE, 0xA80);
+    write_reg(REG_TEST_PATTERN_BAR_WIDTH, 8);
 #endif
 
     // Chip Enable=1 in Output Control register (bit 2 in R0x07)
     reg = read_reg(REG_OUTPUT_CONTROL);
     write_reg(REG_OUTPUT_CONTROL, reg | CHIP_ENABLE_MASK);
+
+    camera_set_frame_buffer(buf);
+
+    // restore Camera Control Register
+    IOWR_32DIRECT(CAM_BASE, CAM_CR, cam_cr);
 }
 
 bool camera_image_received(void)
@@ -209,9 +290,14 @@ void camera_clear_irq_flag(void)
     IOWR_32DIRECT(CAM_BASE, CAM_ISR, CAM_ISR_IRQ_MASK);
 }
 
-void camera_set_frame_buffer(void *buf)
+void camera_set_frame_buffer(uint16_t *buf)
 {
-    IOWR_32DIRECT(CAM_BASE, CAM_IAR, (uint32_t)buf);
+    IOWR_32DIRECT(CAM_BASE, CAM_IAR, (uintptr_t)buf);
+}
+
+uint16_t *camera_get_frame_buffer(void)
+{
+    return (uint16_t *) IORD_32DIRECT(CAM_BASE, CAM_IAR);
 }
 
 void camera_dump_regs(void)
