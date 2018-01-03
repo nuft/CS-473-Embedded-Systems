@@ -1,4 +1,4 @@
-/*VHDL File for master avalon interface*/
+-- VHDL File for master avalon interface
 
 library ieee;
 use ieee.std_logic_1164.all;
