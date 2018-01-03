@@ -86,10 +86,151 @@ Removed MasterEnable signals \\
 Image Address can be updated anytime, will be applied for next image. \\
 }
 
+The Avalon slave component consists of a set of configuration and control register accessible through an Avalon slave interface.
+It also provides an interrupt line to notify the NIOS-II CPU of start and end of image reception. Furthermore it provides the image destination address to the master component and controls the internal enable signals and the camera reset line.
+Figure \ref{fig:avalon_slave} shows the block diagram with the in- and out-going signals and the internal registers.
+
+\todo{Update figure signals}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/CameraAvalonSlave.pdf}
+\caption{Camera Avalon slave block diagram}
+\label{fig:avalon_slave}
+\end{figure}
+
+\subsection{Changelog}
+The Start Image Interrupt was removed because it was not useful on the software side.
+
+\subsection{Interrupts}
+The camera controller provides an interrupt line with two configurable interrupt sources for start and end of image reception. The interrupts can be enabled in the Interrupt Mask Register (IMR). The camera interrupts can be used by the NIOS-II software to handle the image buffers.
+
+\subsection{Register map}
+
+\paragraph{Warning:} All registers must be accessed by 32bit word writes.
+Any byte or half-word access will result in overwriting the entire register.
+
+\subsubsection{Control Register (CR)}
+Address offset: 0x00 \\
+Reset Value: 0x00000000 \\
+[4mm]
+\begin{bytefield}[endianness=big,bitwidth=2.67em]{16}
+\bitheader[lsb=16]{16-31} \\
+\bitbox{16}{Reserved}
+\\
+\bitheader{0-15} \\
+\bitbox{14}{Reserved} &
+\bitbox{1}{CE} &
+\bitbox{1}{EN}
+\end{bytefield}
+
+\begin{registerdescription}
+\item [Reserved] Bits 31:2, read only\\Reserved, read as 0
+\item [CE] Bit 1, read/write\\Camera Enable. Controls the camera reset line.\\0: Camera is held in reset.\\1: Camera is enabled.
+\item [EN] Bit 0, read/write\\Enable the Camera controller.\\0: Camera controller is disabled all camera signals are ignored.\\1: Camera controller is enabled.\\Note: If the camera controller is enabled while the camera is sending a frame, the ongoing transfer is ignored and the enable takes only effect at the next transfer.
+\end{registerdescription}
+
+\subsubsection{Interrupt Mask Register (IMR)}
+Address offset: 0x01 \\
+Reset Value: 0x00000000 \\
+[4mm]
+\begin{bytefield}[endianness=big,bitwidth=2.67em]{16}
+\bitheader[lsb=16]{16-31} \\
+\bitbox{16}{Reserved}
+\\
+\bitheader{0-15} \\
+\bitbox{15}{Reserved} &
+\bitbox{1}{EIE}
+\end{bytefield}
+
+\begin{registerdescription}
+\item [Reserved] Bits 31:1, read only\\Reserved, read as 0
+\item [EIE] Bit 0, read/write\\image reception End Interrupt Enable. \\0: Interrupt is inhibited.\\1: Interrupt is generated when the bit EIF=1 in ISR register.
+\end{registerdescription}
+
+\subsubsection{Interrupt Status Register (ISR)}
+Address offset: 0x02 \\
+Reset Value: 0x00000000 \\
+[4mm]
+\begin{bytefield}[endianness=big,bitwidth=2.67em]{16}
+\bitheader[lsb=16]{16-31} \\
+\bitbox{16}{Reserved}
+\\
+\bitheader{0-15} \\
+\bitbox{15}{Reserved} &
+\bitbox{1}{EIF}
+\end{bytefield}
+
+\begin{registerdescription}
+\item [Reserved] Bits 31:1, read only\\Reserved, read as 0
+\item [EIF] Bit 0, read/write\\End Interrupt Flag. Set by hardware when the image data is completely written to memory. This bit must be cleared by software by writing a 1.
+\end{registerdescription}
+
+\subsubsection{Image Address Register (IAR)}
+Address offset: 0x03 \\
+Reset Value: 0x00000000 \\
+[4mm]
+\begin{bytefield}[endianness=big,bitwidth=2.67em]{16}
+\bitheader[lsb=16]{16-31} \\
+\bitbox{16}{IA[31:16]}
+\\
+\bitheader{0-15} \\
+\bitbox{16}{IA[15:0]}
+\end{bytefield}
+
+\begin{registerdescription}
+\item [IA] Bits 31:0, read/write\\Image Address. Destination address for the 320x240x2 = 153600 byte long image buffer. \\
+Note: This register should be written only between image receptions to guarantee a correct address update. Ideally this is done in the "image reception end interrupt" ISR.
+\end{registerdescription}
+
+
 \subsection{Camera Controller Component}
 \todo[inline]{
 Removed the down sampling. The camera already sends a correct image size. \\
 }
+\subsection{Data reception}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/image_transmission.png}
+\caption{Image transmission with LineValid and FrameValid signals.}
+\label{fig:image_transmission}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/line_transmission.png}
+\caption{Color sensor line transmission with bayer pattern ordering}
+\label{fig:line_transmission}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/camera_interface_data_signals.png}
+\caption{Camera interface input and output signals wave diagram}
+\label{fig:camera_interface_signals}
+\end{figure}
+
+\subsection{Pixel data transformation}
+
+\subsubsection{Bayer to RGB subcomponent}
+
+\subsubsection{Camera interface FSM}
+
+\subsubsection{Timing}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/cam_interface_sim_lbuffer.png}
+\caption{TODO}
+\label{fig:sim_lbuffer}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/cam_interface_sim_lprocess.png}
+\caption{TODO}
+\label{fig:sim_lprocess}
+\end{figure}
+
 \subsection{Avalon Master component}
 
 The master component reads the data from the dual-clocked PixFIFO and writes in the SDRAM through burst transfers on the Avalon bus. The slave component transmits the memory address of the start of the image. During one burst, 8 32-bit words are sent sequentially to the memory. The component's behavior is controlled by a tri-state FSM which generates the necessary Avalon signals which are necessary for a burst transfer. For example, the outputting of the Avalon address and the dependency to input signal \verb'waitreq' are handled by this state machine. 
