@@ -6,14 +6,14 @@
 [x] Camera I2C config
 [ ] Image test
 [x] simple demo using polling
-[ ] use interrupts
+[x] use interrupts
 [ ] Buffer handling
 
 ## HDL
 [x] implement end of image interrupt
 [x] remove start of image interrupt
-[ ] Add CameraIfEnable to avoid image reception when camera not configured
-[ ] Remove downsampling (Camera already sends right image size)
+[x] Add CameraIfEnable to avoid image reception when camera not configured
+[x] Remove downsampling (Camera already sends right image size)
 
 ## Quartus
 [x] I2C
