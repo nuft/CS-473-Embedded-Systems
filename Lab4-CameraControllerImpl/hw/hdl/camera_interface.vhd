@@ -100,6 +100,7 @@ begin
         LineFIFOwreq <= '0';
         LineFIFOrreq <= '0';
         PixFIFOwreq <= '0';
+        LineFIFOrreq <= '0';
         PixelState_next <= PixelState;
 
         LineState_next <= LineState;
@@ -121,6 +122,7 @@ begin
                         LineState_next <= LPROCESS;
                     end if;
                 when LPROCESS =>
+                    LineFIFOrreq <= '1';
                     if LValid = '0' then
                         LineState_next <= IDLE;
                     end if;
@@ -136,19 +138,15 @@ begin
                 GreenCache <= (others => '0');
                 Blue <= (others => '0');
 
-                LineFIFOrreq <= '0';
-
                 -- rising edge of LValid with next state LPROCESS
                 if LineState = PAUSE and LValid = '1' then
                     PixelState_next <= PBUFFER;
                 end if;
             when PBUFFER => -- Blue & Green1
-                LineFIFOrreq <= '1';
                 Blue <= CamDataSample;
                 GreenCache <= LineFIFOData;
                 PixelState_next <= PWRITE;
             when PWRITE => -- Red & Green2
-                LineFIFOrreq <= '1';
                 PixFIFOwreq <= '1';
                 Red <= LineFIFOData;
                 Green <= std_logic_vector(unsigned('0' & GreenCache) + unsigned(CamDataSample));
