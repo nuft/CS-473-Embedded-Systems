@@ -1,0 +1,7 @@
+{
+  signal: [
+  { name: "PIXCLK", 	wave: "n...|...|...|..." },
+  { name: "D[11:0]",	wave: "x34=|34x|53=|53x", data: "G1 R  G1 R B G2  B G2" },
+  { name: "LV",     	wave: "01..|..0|1..|..0" },
+ ]
+}

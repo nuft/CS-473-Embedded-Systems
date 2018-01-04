@@ -1,0 +1,9 @@
+{
+  signal: [
+  { name: "Cam_PIXCLK", 		wave: "p....|........" },
+  { name: "Cam_Data[11:0]",		wave: "3434x|53535353", data: "G1 R G1 R B G2 B G2 B G2 B G2" },
+  { name: "CAM_LVAL",     		wave: "1...0|1......." },
+  { name: "FIFO_2_DATA[15:0]",	wave: "x....|x=x=x=x=", data: "RGB RGB RGB RGB" },
+  { name: "FIFO_2_wreq",     	wave: "0....|.10..10." },
+  ]
+}

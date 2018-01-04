@@ -1,0 +1,10 @@
+{
+  signal: [
+  { name: "PIXCLK", 		     wave: "p....|........." },
+  { name: "LVAL",     		     wave: "1...0|1........" },
+  { name: "Data[11..7] (sampled)",wave: "3434x|.53535353", data: "G1 R G1 R B G2 B G2 B G2 B G2" },
+  { name: "LineFIFODataOut[4..0]",	 wave: "x....|.34343434", data: "G1 R G1 R G1 R G1 R" },
+  { name: "PixFIFODataIn[15:0]",	 wave: "x....|.x=x=x=x=", data: "RGB RGB RGB RGB" },
+  { name: "PixFIFOwreq",     	     wave: "0....|..1010101" },
+  ]
+}

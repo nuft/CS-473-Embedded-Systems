@@ -1,0 +1,7 @@
+{
+  signal: [
+  { name: "D[11:0]",	wave: "x.2.x.2.x|2.x.", data: ["LINE 1", "LINE 2", "LINE N"] },
+  { name: "LV",     	wave: "0.1.0.1.0|1.0." },
+  { name: "FV",     	wave: "01.......|...0" },
+ ]
+}
